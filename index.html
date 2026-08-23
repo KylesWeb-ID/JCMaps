@@ -150,15 +150,15 @@ body{background:var(--navy);}
 .swapbtn:hover{background:rgba(255,255,255,0.1);}
 .swapbtn.spin{transform:rotate(180deg);}
 
-.modebar{display:flex;gap:8px;}
+.modebar{display:flex;gap:6px;}
 .modebtn{
-  flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:9px 6px;border-radius:10px;border:1px solid var(--line);
+  flex:1;display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:8px 3px;border-radius:10px;border:1px solid var(--line);
   background:rgba(255,255,255,0.03);color:var(--gray);cursor:pointer;
-  font-size:12px;font-weight:600;font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:600;font-family:'Inter',sans-serif;
   transition:all .18s ease;
 }
-.modebtn svg{width:16px;height:16px;}
+.modebtn svg{width:15px;height:15px;}
 .modebtn.active{background:var(--teal);border-color:var(--teal);color:var(--navy);}
 .modebtn:active{transform:scale(0.95);}
 
@@ -425,6 +425,10 @@ body{background:var(--navy);}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 h14 M5 17 a1.5 1.5 0 0 1 -1.5 -1.5 V13 l1.8 -4.5 A2 2 0 0 1 7.1 7 h9.8 a2 2 0 0 1 1.8 1.5 L20.5 13 v2.5 A1.5 1.5 0 0 1 19 17"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg>
           Mobil
         </button>
+        <button class="modebtn" data-mode="motor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M5 17 L9 10 h4 l3 4 h4 M9 10 L7 14"/></svg>
+          Motor
+        </button>
         <button class="modebtn" data-mode="bike">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3.2"/><circle cx="18" cy="17" r="3.2"/><path d="M6 17 L10 9 h4 M10 9 L14 17 M14 17 L18 17 L15 11 L10 9"/></svg>
           Sepeda
@@ -625,6 +629,11 @@ const TILE_LAYERS = {
   }
 };
 
+// Valhalla = mesin rute utama (mendukung rute alternatif & profil motor asli).
+// OSRM tetap disiapkan sebagai cadangan otomatis kalau Valhalla tidak terjangkau.
+const VALHALLA_URL = "https://valhalla1.openstreetmap.de/route";
+const VALHALLA_COSTING = { car: "auto", motor: "motorcycle", bike: "bicycle", foot: "pedestrian" };
+
 // Setiap moda punya server utama + server cadangan (fallback) berbeda,
 // supaya kalau satu server publik sedang sibuk/off, rute tetap bisa dihitung.
 const OSRM_PROFILE = {
@@ -641,6 +650,7 @@ const OSRM_PROFILE = {
     { serviceUrl: "https://routing.openstreetmap.de/routed-foot/route/v1", profile: "driving" }
   ]
 };
+OSRM_PROFILE.motor = OSRM_PROFILE.car; // OSRM publik tidak punya profil motor, dipakai hanya saat cadangan
 
 /* ================= STATE ================= */
 let map, tileLayer, currentTileKey = "standard";
@@ -652,7 +662,8 @@ let originLatLng = null, destLatLng = null;
 let currentMode = "car";
 let searchTimer = null;
 let activeSearchTarget = "quick"; // 'quick' | 'origin' | 'dest'
-let currentRoute = null, voiceStepIndex = 0;
+let currentRouteCoords = [], currentManeuvers = [], voiceStepIndex = 0;
+let lastValhallaData = null, activeTripIndex = 0, routeLayers = [];
 let savedPlaceMarkers = [], pendingPlaceLatLng = null, tempPlaceMarker = null;
 let pressTimer = null, pressLatLng = null;
 
@@ -755,6 +766,32 @@ function computeBearing(lat1, lon1, lat2, lon2){
   const y = Math.sin(toRad(lon2-lon1)) * Math.cos(toRad(lat2));
   const x = Math.cos(toRad(lat1))*Math.sin(toRad(lat2)) - Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(toRad(lon2-lon1));
   return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+/* ---- Decoder shape Valhalla (encoded polyline presisi 6 digit) ---- */
+function decodePolyline6(encoded){
+  let index = 0, lat = 0, lng = 0;
+  const coords = [];
+  while(index < encoded.length){
+    let result = 1, shift = 0, b;
+    do{ b = encoded.charCodeAt(index++) - 63 - 1; result += b << shift; shift += 5; } while(b >= 0x1f);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    result = 1; shift = 0;
+    do{ b = encoded.charCodeAt(index++) - 63 - 1; result += b << shift; shift += 5; } while(b >= 0x1f);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    coords.push([lat / 1e6, lng / 1e6]);
+  }
+  return coords;
+}
+
+/* ---- Pemetaan tipe maneuver Valhalla -> ikon kita ---- */
+function valhallaManeuverIcon(type){
+  if([1,2,3].includes(type)) return ICON.pinSm;
+  if([4,5,6].includes(type)) return ICON.flag;
+  if([26,27].includes(type)) return ICON.roundabout;
+  if([9,10,11,18,20,23,13].includes(type)) return ICON.turnRight;
+  if([14,15,16,19,21,24,12].includes(type)) return ICON.turnLeft;
+  return ICON.straight;
 }
 
 const mapEl = document.getElementById('map');
@@ -882,17 +919,17 @@ function onLocationUpdate(pos){
   }
 
   // Panduan suara: umumkan instruksi berikutnya berdasarkan jarak ke titik belokan
-  if(currentRoute && SETTINGS.voice && voiceStepIndex < currentRoute.instructions.length){
-    const ins = currentRoute.instructions[voiceStepIndex];
-    const coordIdx = Math.min(ins.index || 0, currentRoute.coordinates.length - 1);
-    const pt = currentRoute.coordinates[coordIdx];
-    const d = distMeters(latitude, longitude, pt.lat, pt.lng);
-    if(d < 400 && ins._voiceState === 0){
-      ins._voiceState = 1;
-      speak(`Dalam ${Math.round(d/50)*50} meter, ${translateInstruction(ins.text)}`);
-    } else if(d < 40 && ins._voiceState <= 1){
-      ins._voiceState = 2;
-      speak(translateInstruction(ins.text));
+  if(currentManeuvers.length && SETTINGS.voice && voiceStepIndex < currentManeuvers.length){
+    const m = currentManeuvers[voiceStepIndex];
+    const idx = Math.min(m.coordIndex || 0, currentRouteCoords.length - 1);
+    const pt = currentRouteCoords[idx];
+    const d = pt ? distMeters(latitude, longitude, pt[0], pt[1]) : Infinity;
+    if(d < 400 && m._voiceState === 0){
+      m._voiceState = 1;
+      speak(`Dalam ${Math.round(d/50)*50} meter, ${translateInstruction(m.text)}`);
+    } else if(d < 40 && m._voiceState <= 1){
+      m._voiceState = 2;
+      speak(translateInstruction(m.text));
       voiceStepIndex++;
     }
   }
@@ -1063,7 +1100,7 @@ function translateInstruction(text){
   if(!text) return '';
   const dirMap = { northeast:'timur laut', northwest:'barat laut', southeast:'tenggara', southwest:'barat daya', north:'utara', south:'selatan', east:'timur', west:'barat' };
   let t = text;
-  t = t.replace(/^Head (northeast|northwest|southeast|southwest|north|south|east|west)/i, (m,d)=> 'Menuju arah ' + (dirMap[d.toLowerCase()] || d));
+  t = t.replace(/^(Drive|Walk|Bike|Ride|Head)\s+(northeast|northwest|southeast|southwest|north|south|east|west)\b/i, (m,verb,d)=> 'Menuju arah ' + (dirMap[d.toLowerCase()] || d));
   t = t.replace(/^Turn slight left/i, 'Belok sedikit ke kiri');
   t = t.replace(/^Turn slight right/i, 'Belok sedikit ke kanan');
   t = t.replace(/^Turn sharp left/i, 'Belok tajam ke kiri');
@@ -1087,6 +1124,7 @@ function translateInstruction(text){
   t = t.replace(/^Waypoint \d+ reached/i, 'Titik transit tercapai');
   t = t.replace(/ to stay on/i, ' agar tetap di');
   t = t.replace(/ onto /i, ' menuju ');
+  t = t.replace(/ on /i, ' di ');
   return t;
 }
 
@@ -1103,29 +1141,155 @@ function formatDistance(m){
 
 function clearRoute(){
   if(routingControl){ map.removeControl(routingControl); routingControl = null; }
+  clearRouteLayers();
   document.getElementById('bottomSheet').classList.remove('show');
-  currentRoute = null;
+  currentRouteCoords = [];
+  currentManeuvers = [];
   voiceStepIndex = 0;
+  lastValhallaData = null;
+  activeTripIndex = 0;
   if('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
 
 function buildExcludeParam(){
-  if(currentMode !== 'car') return null;
+  if(currentMode !== 'car' && currentMode !== 'motor') return null;
   const ex = [];
   if(SETTINGS.avoidToll) ex.push('toll');
   if(SETTINGS.avoidHighway) ex.push('motorway');
   return ex.length ? ex.join(',') : null;
 }
 
+/* ================= TAMPILAN PANDUAN (dipakai bersama oleh Valhalla & cadangan OSRM) ================= */
+function renderGuidance(coordsLatLng, maneuvers, totalTimeSec, totalDistM){
+  currentRouteCoords = coordsLatLng;
+  currentManeuvers = maneuvers.map(m => Object.assign({ _voiceState:0 }, m));
+  voiceStepIndex = 0;
+
+  document.getElementById('sumTime').textContent = formatDuration(totalTimeSec);
+  document.getElementById('sumDist').textContent = formatDistance(totalDistM);
+
+  const stepsWrap = document.getElementById('stepsList');
+  stepsWrap.innerHTML = '';
+  currentManeuvers.forEach((m, idx) => {
+    const div = document.createElement('div');
+    div.className = 'step-item';
+    div.style.animationDelay = (idx*0.03)+'s';
+    div.innerHTML = `<div class="step-icon">${m.icon || ICON.straight}</div>
+      <div><div class="step-text">${translateInstruction(m.text)}</div><div class="step-dist">${formatDistance(m.distanceM)}</div></div>`;
+    stepsWrap.appendChild(div);
+  });
+
+  document.getElementById('directionsPanel').classList.remove('show');
+  document.getElementById('searchResults').classList.remove('open');
+  document.getElementById('bottomSheet').classList.remove('expanded');
+  document.getElementById('bottomSheet').classList.add('show');
+  followMode = false;
+  document.getElementById('btnLocate').classList.remove('active');
+
+  speak(`Rute ditemukan. Jarak ${formatDistance(totalDistM)}, estimasi ${formatDuration(totalTimeSec)}.`);
+}
+
+/* ================= VALHALLA (mesin rute utama) ================= */
+function buildValhallaCostingOptions(mode){
+  if(mode !== 'car' && mode !== 'motor') return undefined;
+  const opts = {};
+  if(SETTINGS.avoidToll){ opts.use_tolls = 0; opts.toll_booth_penalty = 43200; }
+  if(SETTINGS.avoidHighway){ opts.use_highways = 0; }
+  return Object.keys(opts).length ? { [VALHALLA_COSTING[mode]]: opts } : undefined;
+}
+
+async function fetchValhallaRoute(){
+  const costing = VALHALLA_COSTING[currentMode];
+  const body = {
+    locations: [
+      { lat: originLatLng[0], lon: originLatLng[1] },
+      { lat: destLatLng[0], lon: destLatLng[1] }
+    ],
+    costing: costing,
+    units: "kilometers",
+    language: "en-US",
+    directions_options: { units: "kilometers", language: "en-US" },
+    alternates: 2
+  };
+  const costingOptions = buildValhallaCostingOptions(currentMode);
+  if(costingOptions) body.costing_options = costingOptions;
+
+  const res = await fetch(VALHALLA_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error('Valhalla HTTP ' + res.status);
+  const data = await res.json();
+  if(!data.trip || !data.trip.legs) throw new Error('Respons Valhalla tidak valid');
+  return data;
+}
+
+function tripsFromData(data){
+  return [data.trip, ...((data.alternates || []).map(a => a.trip))];
+}
+function coordsFromTrip(trip){
+  let pts = [];
+  trip.legs.forEach(leg => { pts = pts.concat(decodePolyline6(leg.shape)); });
+  return pts;
+}
+function maneuversFromTrip(trip){
+  const list = [];
+  let shapeOffset = 0;
+  trip.legs.forEach(leg => {
+    const legCoords = decodePolyline6(leg.shape);
+    leg.maneuvers.forEach(m => {
+      list.push({
+        text: m.instruction,
+        distanceM: (m.length || 0) * 1000,
+        icon: valhallaManeuverIcon(m.type),
+        coordIndex: shapeOffset + (m.begin_shape_index || 0)
+      });
+    });
+    shapeOffset += legCoords.length;
+  });
+  return list;
+}
+
+function clearRouteLayers(){
+  routeLayers.forEach(l => map.removeLayer(l));
+  routeLayers = [];
+}
+
+function renderRoutes(){
+  clearRouteLayers();
+  if(!lastValhallaData) return;
+  const trips = tripsFromData(lastValhallaData);
+  trips.forEach((trip, idx) => {
+    if(idx === activeTripIndex) return;
+    const coords = coordsFromTrip(trip);
+    const line = L.polyline(coords, { color:'#9AA6B4', weight:4, opacity:0.85 }).addTo(map);
+    line.on('click', () => setActiveTrip(idx));
+    routeLayers.push(line);
+  });
+  const activeCoords = coordsFromTrip(trips[activeTripIndex]);
+  const casing = L.polyline(activeCoords, { color:'#0E1A24', opacity:0.5, weight:9 }).addTo(map);
+  const mainLine = L.polyline(activeCoords, { color:'#2EC4B6', opacity:0.95, weight:5 }).addTo(map);
+  routeLayers.push(casing, mainLine);
+}
+
+function setActiveTrip(idx){
+  activeTripIndex = idx;
+  renderRoutes();
+  const trip = tripsFromData(lastValhallaData)[idx];
+  renderGuidance(coordsFromTrip(trip), maneuversFromTrip(trip), trip.summary.time, trip.summary.length * 1000);
+}
+
 function tryRouteWithServer(serverIndex){
   const servers = OSRM_PROFILE[currentMode];
   if(serverIndex >= servers.length){
-    showToast('Semua server rute publik sedang tidak bisa dijangkau. Cek koneksi internet Anda, atau coba lagi sebentar lagi.', false);
+    showToast('Semua server rute sedang tidak bisa dijangkau. Cek koneksi internet Anda, atau coba lagi sebentar lagi.', false);
     return;
   }
   const cfg = servers[serverIndex];
 
   if(routingControl){ map.removeControl(routingControl); routingControl = null; }
+  clearRouteLayers();
 
   const routerOpts = { serviceUrl: cfg.serviceUrl, profile: cfg.profile, useHints: false };
   const exclude = buildExcludeParam();
@@ -1138,7 +1302,9 @@ function tryRouteWithServer(serverIndex){
     draggableWaypoints: false,
     fitSelectedRoutes: true,
     show: false,
+    showAlternatives: true,
     lineOptions: { styles: [ { color:'#0E1A24', opacity:0.5, weight:9 }, { color:'#2EC4B6', opacity:0.95, weight:5 } ], addWaypoints:false },
+    altLineOptions: { styles: [ { color:'#0E1A24', opacity:0.35, weight:8 }, { color:'#9AA6B4', opacity:0.85, weight:4 } ], addWaypoints:false },
     createMarker: function(i, wp){
       if(i === 0){
         return L.marker(wp.latLng, { icon: L.divIcon({ className:'pin-origin', html: ICON.origin, iconSize:[22,22], iconAnchor:[11,11] }) });
@@ -1149,32 +1315,15 @@ function tryRouteWithServer(serverIndex){
 
   routingControl.on('routesfound', function(e){
     const route = e.routes[0];
-    document.getElementById('sumTime').textContent = formatDuration(route.summary.totalTime);
-    document.getElementById('sumDist').textContent = formatDistance(route.summary.totalDistance);
-
-    route.instructions.forEach(ins => { ins._voiceState = 0; });
-    currentRoute = route;
-    voiceStepIndex = 0;
-    speak(`Rute ditemukan. Jarak ${formatDistance(route.summary.totalDistance)}, estimasi ${formatDuration(route.summary.totalTime)}.`);
-
-    const stepsWrap = document.getElementById('stepsList');
-    stepsWrap.innerHTML = '';
-    route.instructions.forEach((ins, idx) => {
-      const div = document.createElement('div');
-      div.className = 'step-item';
-      div.style.animationDelay = (idx*0.03)+'s';
-      div.innerHTML = `<div class="step-icon">${buildStepIcon(ins.type, ins.modifier)}</div>
-        <div><div class="step-text">${translateInstruction(ins.text)}</div><div class="step-dist">${formatDistance(ins.distance)}</div></div>`;
-      stepsWrap.appendChild(div);
-    });
-
-    // Sembunyikan panel pencarian/arah supaya peta & rute terlihat penuh, bukan ketutupan
-    document.getElementById('directionsPanel').classList.remove('show');
-    document.getElementById('searchResults').classList.remove('open');
-    document.getElementById('bottomSheet').classList.remove('expanded');
-    document.getElementById('bottomSheet').classList.add('show');
-    followMode = false;
-    document.getElementById('btnLocate').classList.remove('active');
+    const coords = route.coordinates.map(c => [c.lat, c.lng]);
+    const maneuvers = route.instructions.map(ins => ({
+      text: ins.text,
+      distanceM: ins.distance,
+      icon: buildStepIcon(ins.type, ins.modifier),
+      coordIndex: ins.index || 0
+    }));
+    renderGuidance(coords, maneuvers, route.summary.totalTime, route.summary.totalDistance);
+    showToast('Rute dihitung pakai server cadangan (OSRM), Valhalla sedang tidak terjangkau.', false);
   });
 
   routingControl.on('routingerror', function(e){
@@ -1190,7 +1339,7 @@ function tryRouteWithServer(serverIndex){
   });
 }
 
-function computeRoute(){
+async function computeRoute(){
   if(!originLatLng && document.getElementById('inputOrigin').dataset.lat){
     originLatLng = [parseFloat(document.getElementById('inputOrigin').dataset.lat), parseFloat(document.getElementById('inputOrigin').dataset.lng)];
   }
@@ -1198,10 +1347,31 @@ function computeRoute(){
     showToast('Tentukan lokasi asal dan tujuan terlebih dahulu', false);
     return;
   }
+
+  if(!originMarker){
+    originMarker = L.marker(originLatLng, { icon: L.divIcon({ className:'pin-origin', html: ICON.origin, iconSize:[22,22], iconAnchor:[11,11] }) }).addTo(map);
+  } else {
+    originMarker.setLatLng(originLatLng);
+  }
+  if(!destMarker){
+    destMarker = L.marker(destLatLng, { icon: L.divIcon({ className:'pin-dest', html: ICON.pin, iconSize:[34,44], iconAnchor:[17,44] }) }).addTo(map);
+  } else {
+    destMarker.setLatLng(destLatLng);
+  }
+
   clearRoute();
   showToast('Menghitung rute...', true);
-  tryRouteWithServer(0);
-  setTimeout(hideToast, 1800);
+
+  try{
+    const data = await fetchValhallaRoute();
+    lastValhallaData = data;
+    setActiveTrip(0);
+    map.fitBounds(L.latLngBounds(coordsFromTrip(data.trip)), { padding:[70,70] });
+  }catch(err){
+    console.error('JCMaps: Valhalla tidak terjangkau, beralih ke OSRM cadangan.', err);
+    tryRouteWithServer(0);
+  }
+  hideToast();
 }
 
 /* ================= UI WIRING ================= */
@@ -1238,7 +1408,7 @@ function init(){
       document.querySelectorAll('.modebtn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentMode = btn.dataset.mode;
-      if(routingControl) computeRoute();
+      if(routingControl || lastValhallaData) computeRoute();
     });
   });
 
@@ -1319,7 +1489,7 @@ function init(){
         applySettingsToUI();
         if(!SETTINGS.voice && 'speechSynthesis' in window){ window.speechSynthesis.cancel(); }
       }
-      if((key === 'avoidToll' || key === 'avoidHighway') && routingControl){ computeRoute(); }
+      if((key === 'avoidToll' || key === 'avoidHighway') && (routingControl || lastValhallaData)){ computeRoute(); }
     });
   });
 
