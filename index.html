@@ -422,10 +422,21 @@ const TILE_LAYERS = {
   }
 };
 
+// Setiap moda punya server utama + server cadangan (fallback) berbeda,
+// supaya kalau satu server publik sedang sibuk/off, rute tetap bisa dihitung.
 const OSRM_PROFILE = {
-  car:  "https://routing.openstreetmap.de/routed-car/route/v1",
-  bike: "https://routing.openstreetmap.de/routed-bike/route/v1",
-  foot: "https://routing.openstreetmap.de/routed-foot/route/v1"
+  car:  [
+    { serviceUrl: "https://router.project-osrm.org/route/v1", profile: "driving" },
+    { serviceUrl: "https://routing.openstreetmap.de/routed-car/route/v1", profile: "driving" }
+  ],
+  bike: [
+    { serviceUrl: "https://routing.openstreetmap.de/routed-bike/route/v1", profile: "bike" },
+    { serviceUrl: "https://routing.openstreetmap.de/routed-bike/route/v1", profile: "driving" }
+  ],
+  foot: [
+    { serviceUrl: "https://routing.openstreetmap.de/routed-foot/route/v1", profile: "foot" },
+    { serviceUrl: "https://routing.openstreetmap.de/routed-foot/route/v1", profile: "driving" }
+  ]
 };
 
 /* ================= STATE ================= */
@@ -660,20 +671,19 @@ function clearRoute(){
   document.getElementById('bottomSheet').classList.remove('show');
 }
 
-function computeRoute(){
-  if(!originLatLng && document.getElementById('inputOrigin').dataset.lat){
-    originLatLng = [parseFloat(document.getElementById('inputOrigin').dataset.lat), parseFloat(document.getElementById('inputOrigin').dataset.lng)];
-  }
-  if(!originLatLng || !destLatLng){
-    showToast('Tentukan lokasi asal dan tujuan terlebih dahulu', false);
+function tryRouteWithServer(serverIndex){
+  const servers = OSRM_PROFILE[currentMode];
+  if(serverIndex >= servers.length){
+    showToast('Semua server rute publik sedang tidak bisa dijangkau. Cek koneksi internet Anda, atau coba lagi sebentar lagi.', false);
     return;
   }
-  clearRoute();
+  const cfg = servers[serverIndex];
 
-  const serviceUrl = OSRM_PROFILE[currentMode];
+  if(routingControl){ map.removeControl(routingControl); routingControl = null; }
+
   routingControl = L.Routing.control({
     waypoints: [ L.latLng(originLatLng[0], originLatLng[1]), L.latLng(destLatLng[0], destLatLng[1]) ],
-    router: L.Routing.osrmv1({ serviceUrl: serviceUrl, profile: currentMode === 'car' ? 'driving' : currentMode }),
+    router: L.Routing.osrmv1({ serviceUrl: cfg.serviceUrl, profile: cfg.profile, useHints: false }),
     addWaypoints: false,
     draggableWaypoints: false,
     fitSelectedRoutes: true,
@@ -708,9 +718,31 @@ function computeRoute(){
     document.getElementById('btnLocate').classList.remove('active');
   });
 
-  routingControl.on('routingerror', function(){
-    showToast('Gagal menghitung rute. Coba lagi.', false);
+  routingControl.on('routingerror', function(e){
+    // Info detail error ditulis ke console supaya mudah didiagnosis (F12 > Console)
+    console.error('JCMaps routing error dari', cfg.serviceUrl, e.error || e);
+    const reason = e && e.error && e.error.message ? e.error.message : '';
+    if(/NoRoute|NoSegment/i.test(reason)){
+      showToast('Tidak ditemukan jalur antara dua lokasi tersebut.', false);
+      return;
+    }
+    // coba server cadangan berikutnya secara otomatis
+    tryRouteWithServer(serverIndex + 1);
   });
+}
+
+function computeRoute(){
+  if(!originLatLng && document.getElementById('inputOrigin').dataset.lat){
+    originLatLng = [parseFloat(document.getElementById('inputOrigin').dataset.lat), parseFloat(document.getElementById('inputOrigin').dataset.lng)];
+  }
+  if(!originLatLng || !destLatLng){
+    showToast('Tentukan lokasi asal dan tujuan terlebih dahulu', false);
+    return;
+  }
+  clearRoute();
+  showToast('Menghitung rute...', true);
+  tryRouteWithServer(0);
+  setTimeout(hideToast, 1800);
 }
 
 /* ================= UI WIRING ================= */
@@ -796,3 +828,4 @@ window.addEventListener('load', init);
 </script>
 </body>
 </html>
+
