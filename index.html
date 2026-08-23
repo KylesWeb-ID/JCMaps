@@ -288,6 +288,93 @@ body{background:var(--navy);}
 #searchResults::-webkit-scrollbar, #stepsList::-webkit-scrollbar{width:5px;}
 #searchResults::-webkit-scrollbar-thumb, #stepsList::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
 
+/* ---------- MENU SHEET (Tersimpan & Pengaturan) ---------- */
+#menuSheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:950;
+  background:rgba(22,39,58,0.97);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);border-radius:20px 20px 0 0;
+  box-shadow:0 -10px 30px rgba(6,12,20,0.4);
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.22,.9,.32,1);
+  max-height:78vh;display:flex;flex-direction:column;
+}
+#menuSheet.show{transform:translateY(0);}
+.menu-tabs{display:flex;gap:8px;padding:6px 16px 12px;border-bottom:1px solid var(--line);}
+.menu-tab{
+  flex:1;padding:9px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);color:var(--gray);font-family:'Space Grotesk',sans-serif;
+  font-weight:600;font-size:13px;cursor:pointer;transition:all .18s ease;
+}
+.menu-tab.active{background:var(--teal);border-color:var(--teal);color:var(--navy);}
+.menu-close{position:absolute;top:10px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;}
+.menu-close:active{transform:scale(0.88);}
+.menu-content{overflow-y:auto;padding:14px 16px 22px;}
+
+/* saved places list */
+.place-add-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:11px;border-radius:12px;border:1px dashed var(--teal);
+  background:rgba(46,196,182,0.08);color:var(--teal);font-weight:700;font-size:13.5px;
+  cursor:pointer;margin-bottom:12px;transition:background .18s ease;
+}
+.place-add-btn:active{transform:scale(0.98);}
+.place-item{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line);animation:fadeInUp .22s ease both;}
+.place-item:last-child{border-bottom:none;}
+.place-icon{width:34px;height:34px;min-width:34px;border-radius:10px;background:rgba(242,169,59,0.14);color:var(--amber);display:flex;align-items:center;justify-content:center;}
+.place-icon svg{width:18px;height:18px;}
+.place-name{flex:1;color:var(--cream);font-size:13.5px;font-weight:600;}
+.place-actions{display:flex;gap:6px;}
+.place-actions button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,0.04);color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.place-actions button:active{transform:scale(0.9);}
+.place-actions button.danger{color:var(--danger);}
+.empty-hint{color:var(--gray);font-size:13px;text-align:center;padding:20px 10px;}
+
+/* settings sections */
+.settings-section{margin-bottom:18px;}
+.settings-title{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-text{display:flex;flex-direction:column;}
+.toggle-label{color:var(--cream);font-size:13.5px;font-weight:600;}
+.toggle-hint{color:var(--gray);font-size:11px;margin-top:2px;}
+.toggle-switch{width:44px;height:26px;min-width:44px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .2s ease;}
+.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--cream);transition:transform .22s cubic-bezier(.4,1.4,.6,1);box-shadow:0 2px 4px rgba(0,0,0,0.3);}
+.toggle-switch.on{background:var(--teal);}
+.toggle-switch.on::after{transform:translateX(18px);}
+
+.gps-chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;}
+.gps-chip{
+  min-width:68px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:10px 8px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);color:var(--gray);cursor:pointer;transition:all .18s ease;
+}
+.gps-chip svg,.gps-chip .chip-icon{width:26px;height:26px;}
+.gps-chip span{font-size:11px;font-weight:600;}
+.gps-chip.active{border-color:var(--teal);background:rgba(46,196,182,0.12);color:var(--teal);}
+.gps-chip:active{transform:scale(0.95);}
+
+/* place dialog */
+#placeDialog{
+  position:absolute;inset:0;z-index:1100;
+  background:rgba(6,12,20,0.55);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn .2s ease both;
+}
+#placeDialog.show{display:flex;}
+.dialog-card{
+  width:100%;max-width:340px;background:var(--navy-soft-2);border:1px solid var(--line);
+  border-radius:16px;padding:18px;box-shadow:var(--shadow);
+  animation:dropIn .28s cubic-bezier(.3,1.2,.5,1) both;
+}
+.dialog-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--cream);margin-bottom:12px;}
+.dialog-actions{display:flex;gap:10px;margin-top:14px;}
+.dialog-actions button{flex:1;padding:10px;border-radius:10px;border:none;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;}
+.dialog-actions .btn-cancel{background:rgba(255,255,255,0.06);color:var(--cream);}
+.dialog-actions .btn-save{background:var(--teal);color:var(--navy);}
+.dialog-actions button:active{transform:scale(0.96);}
+
+/* saved place pin on map */
+.pin-saved{filter:drop-shadow(0 5px 9px rgba(0,0,0,0.4));animation:dropIn .4s ease both;}
+
 /* ---------- RESPONSIVE ---------- */
 @media (min-width:640px){
   #topbar{max-width:420px;}
@@ -295,6 +382,7 @@ body{background:var(--navy);}
   #searchResults{max-width:420px;}
   .wordmark{display:block;}
   #bottomSheet{left:14px;right:auto;width:400px;border-radius:20px;bottom:14px;box-shadow:var(--shadow);}
+  #menuSheet{left:14px;right:auto;width:400px;border-radius:20px;bottom:14px;box-shadow:var(--shadow);}
 }
 </style>
 </head>
@@ -364,6 +452,9 @@ body{background:var(--navy);}
     <button class="sidebtn" id="btnLocate" title="Lokasi saya">
       <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2 v3 M12 19 v3 M2 12 h3 M19 12 h3"/></svg>
     </button>
+    <button class="sidebtn" id="btnMenu" title="Tersimpan & Pengaturan">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M4 6 h16 M4 12 h16 M4 18 h16"/></svg>
+    </button>
     <div class="zoomgroup">
       <button class="zoombtn" id="btnZoomIn"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M12 5 v14 M5 12 h14"/></svg></button>
       <button class="zoombtn" id="btnZoomOut"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M5 12 h14"/></svg></button>
@@ -385,12 +476,104 @@ body{background:var(--navy);}
           <span id="sumDist">--</span>
         </div>
       </div>
+      <button class="sheet-close" id="btnVoiceToggle" style="margin-right:6px;" title="Suara navigasi">
+        <svg class="icon" id="voiceIcon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M4 9 v6 h4 l5 4 V5 L8 9 Z"/><path d="M17 8.5 a5 5 0 0 1 0 7"/><path d="M19.5 6 a9 9 0 0 1 0 12"/></svg>
+      </button>
       <button class="sheet-close" id="btnSheetClose">
         <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>
       </button>
     </div>
     <svg class="icon sheet-chevron" id="sheetChevron" viewBox="0 0 24 24" style="display:block;margin:0 auto 4px;"><path d="M6 9 L12 15 L18 9"/></svg>
     <div id="stepsList"></div>
+  </div>
+
+  <div id="menuSheet">
+    <button class="menu-close" id="btnMenuClose">
+      <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>
+    </button>
+    <div class="sheet-handle"></div>
+    <div class="menu-tabs">
+      <button class="menu-tab active" data-tab="places">Tersimpan</button>
+      <button class="menu-tab" data-tab="settings">Pengaturan</button>
+    </div>
+
+    <div class="menu-content" id="tabPlaces">
+      <button class="place-add-btn" id="btnAddCurrentPlace">
+        <svg class="icon" viewBox="0 0 24 24" style="width:17px;height:17px;"><path d="M12 5 v14 M5 12 h14"/></svg>
+        Tandai Lokasi Saat Ini
+      </button>
+      <div id="placesList"></div>
+    </div>
+
+    <div class="menu-content" id="tabSettings" style="display:none;">
+      <div class="settings-section">
+        <div class="settings-title">Umum</div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Suara Navigasi</span>
+            <span class="toggle-hint">Instruksi arah diucapkan otomatis</span>
+          </div>
+          <div class="toggle-switch" data-setting="voice"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Hindari</div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Hindari Jalan Tol</span></div>
+          <div class="toggle-switch" data-setting="avoidToll"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Hindari Jalan Raya</span></div>
+          <div class="toggle-switch" data-setting="avoidHighway"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Hindari Kemacetan</span>
+            <span class="toggle-hint">Butuh data lalu lintas real-time — belum tersedia di server rute gratis ini</span>
+          </div>
+          <div class="toggle-switch" data-setting="avoidTraffic"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Fitur Lanjutan</div>
+        <div style="color:var(--gray);font-size:12px;margin-bottom:6px;">Tampilan penanda GPS</div>
+        <div class="gps-chips" id="gpsChips">
+          <div class="gps-chip" data-icon="default">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></svg>
+            <span>Biasa</span>
+          </div>
+          <div class="gps-chip" data-icon="motor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="2.6"/><circle cx="18" cy="17" r="2.6"/><path d="M6 17 L10 9 L14 9 L16 13 L18 17 M10 9 L8 13 L14 13"/></svg>
+            <span>Motor</span>
+          </div>
+          <div class="gps-chip" data-icon="mobil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 h14 M5 17 a1.5 1.5 0 0 1 -1.5 -1.5 V13 l1.8 -4.5 A2 2 0 0 1 7.1 7 h9.8 a2 2 0 0 1 1.8 1.5 L20.5 13 v2.5 A1.5 1.5 0 0 1 19 17"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg>
+            <span>Mobil</span>
+          </div>
+          <div class="gps-chip" data-icon="sepeda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3.2"/><circle cx="18" cy="17" r="3.2"/><path d="M6 17 L10 9 h4 M10 9 L14 17 M14 17 L18 17 L15 11 L10 9"/></svg>
+            <span>Sepeda</span>
+          </div>
+          <div class="gps-chip" data-icon="orang">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"/><path d="M9 22 L10.5 15 L8 12 L9.5 8 M15 22 L13.5 14 L16 11 L14.5 8"/></svg>
+            <span>Orang</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="placeDialog">
+    <div class="dialog-card">
+      <div class="dialog-title">Simpan Lokasi</div>
+      <input type="text" class="field-input" id="placeNameInput" placeholder="Nama tempat (contoh: Rumah, Kantor)" style="width:100%;">
+      <div class="dialog-actions">
+        <button class="btn-cancel" id="btnPlaceCancel">Batal</button>
+        <button class="btn-save" id="btnPlaceSave">Simpan</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -410,7 +593,18 @@ const ICON = {
   straight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20 V4 M6 10 L12 4 L18 10"/></svg>`,
   flag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4 M5 4 h13 l-3 4 l3 4 H5"/></svg>`,
   pinSm: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 19 14.5 19 9.5 A7 7 0 0 0 5 9.5 C5 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>`,
-  roundabout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 2 v5 M12 22 v-5 M2 12 h5 M22 12 h-5"/></svg>`
+  roundabout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 2 v5 M12 22 v-5 M2 12 h5 M22 12 h-5"/></svg>`,
+  pinStar: `<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.3 0 0 6.3 0 14c0 10 14 22 14 22s14-12 14-22C28 6.3 21.7 0 14 0z" fill="#2EC4B6"/><path d="M14 7 l2.1 4.3 4.7 0.7 -3.4 3.3 0.8 4.7 -4.2 -2.2 -4.2 2.2 0.8 -4.7 -3.4 -3.3 4.7 -0.7 Z" fill="#0E1A24"/></svg>`,
+  gotoIcon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12 h14 M13 6 l6 6 -6 6"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M4 7 h16 M9 7 V4 h6 v3 M6 7 l1 13 h10 l1 -13"/></svg>`,
+  speakerOn: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M4 9 v6 h4 l5 4 V5 L8 9 Z"/><path d="M17 8.5 a5 5 0 0 1 0 7"/><path d="M19.5 6 a9 9 0 0 1 0 12"/></svg>`,
+  speakerOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M4 9 v6 h4 l5 4 V5 L8 9 Z"/><path d="M17 9 L22 14 M22 9 L17 14"/></svg>`,
+  vehicle: {
+    motor: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gMotor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><rect x="9" y="13" width="12" height="3" rx="1.5" fill="#0E1A24" opacity="0.4"/><rect x="13" y="8" width="4" height="14" rx="2" fill="url(#gMotor)"/><ellipse cx="15" cy="6" rx="3" ry="4" fill="url(#gMotor)"/><ellipse cx="15" cy="24" rx="3.4" ry="4.4" fill="url(#gMotor)"/></svg>`,
+    mobil: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gMobil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><rect x="7" y="4" width="16" height="22" rx="6" fill="url(#gMobil)"/><rect x="9.5" y="8" width="11" height="6" rx="2" fill="#0E1A24" opacity="0.35"/><rect x="9.5" y="17" width="11" height="5" rx="2" fill="#0E1A24" opacity="0.2"/></svg>`,
+    sepeda: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gSepeda" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><circle cx="15" cy="6" r="3.6" fill="none" stroke="url(#gSepeda)" stroke-width="2.4"/><circle cx="15" cy="24" r="3.6" fill="none" stroke="url(#gSepeda)" stroke-width="2.4"/><line x1="15" y1="9.6" x2="15" y2="20.4" stroke="url(#gSepeda)" stroke-width="2.4" stroke-linecap="round"/><line x1="10.5" y1="6" x2="19.5" y2="6" stroke="url(#gSepeda)" stroke-width="2" stroke-linecap="round"/></svg>`,
+    orang: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gOrang" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><circle cx="15" cy="9" r="4.4" fill="url(#gOrang)"/><path d="M15 13 L22 25 L15 21 L8 25 Z" fill="url(#gOrang)"/></svg>`
+  }
 };
 
 const TILE_LAYERS = {
@@ -458,6 +652,44 @@ let originLatLng = null, destLatLng = null;
 let currentMode = "car";
 let searchTimer = null;
 let activeSearchTarget = "quick"; // 'quick' | 'origin' | 'dest'
+let currentRoute = null, voiceStepIndex = 0;
+let savedPlaceMarkers = [], pendingPlaceLatLng = null, tempPlaceMarker = null;
+let pressTimer = null, pressLatLng = null;
+
+/* ================= SETELAN & PENANDA TEMPAT (localStorage) ================= */
+const SETTINGS_KEY = 'jcmaps_settings';
+const PLACES_KEY = 'jcmaps_places';
+let SETTINGS = { voice:true, avoidToll:false, avoidHighway:false, avoidTraffic:false, gpsIconType:'default' };
+let PLACES = [];
+
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(raw) SETTINGS = Object.assign(SETTINGS, JSON.parse(raw));
+  }catch(e){ /* localStorage tidak tersedia, pakai default */ }
+}
+function saveSettings(){
+  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }catch(e){}
+}
+function loadPlaces(){
+  try{
+    const raw = localStorage.getItem(PLACES_KEY);
+    PLACES = raw ? JSON.parse(raw) : [];
+  }catch(e){ PLACES = []; }
+}
+function savePlaces(){
+  try{ localStorage.setItem(PLACES_KEY, JSON.stringify(PLACES)); }catch(e){}
+}
+function applySettingsToUI(){
+  document.querySelectorAll('.toggle-switch[data-setting]').forEach(el => {
+    el.classList.toggle('on', !!SETTINGS[el.dataset.setting]);
+  });
+  document.querySelectorAll('.gps-chip[data-icon]').forEach(el => {
+    el.classList.toggle('active', el.dataset.icon === SETTINGS.gpsIconType);
+  });
+  const vIcon = document.getElementById('voiceIcon');
+  if(vIcon) vIcon.innerHTML = SETTINGS.voice ? ICON.speakerOn.replace(/<\/?svg[^>]*>/g,'') : ICON.speakerOff.replace(/<\/?svg[^>]*>/g,'');
+}
 
 /* ================= MAP INIT ================= */
 function initMap(){
@@ -497,6 +729,20 @@ function showToast(msg, persistent, actionLabel, actionFn){
   }
 }
 function hideToast(){ document.getElementById('toast').classList.remove('show'); }
+
+/* ================= SUARA NAVIGASI (Web Speech API) ================= */
+function speak(text){
+  if(!SETTINGS.voice) return;
+  if(!('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID';
+    u.rate = 1;
+    u.pitch = 1;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* abaikan jika speech synthesis tidak didukung */ }
+}
 
 function distMeters(lat1, lon1, lat2, lon2){
   const R = 6371000, toRad = d => d*Math.PI/180;
@@ -578,14 +824,20 @@ function handleGeoError(err){
 }
 
 function buildGpsIcon(heading){
-  const rot = (typeof heading === 'number' && !isNaN(heading)) ? heading : 0;
   const hasHeading = (typeof heading === 'number' && !isNaN(heading));
+  const rot = hasHeading ? heading : 0;
+  const type = SETTINGS.gpsIconType || 'default';
+  let inner;
+  if(type === 'default'){
+    inner = hasHeading
+      ? `<div class="gps-arrow" style="transform:translate(-50%,-50%) rotate(${rot}deg)">${ICON.arrow}</div>`
+      : `<div class="gps-dot"></div>`;
+  } else {
+    inner = `<div class="gps-arrow" style="transform:translate(-50%,-50%) rotate(${rot}deg)">${ICON.vehicle[type]}</div>`;
+  }
   return L.divIcon({
     className: '',
-    html: `<div class="gps-puck">
-             <div class="gps-pulse"></div>
-             ${hasHeading ? `<div class="gps-arrow" style="transform:translate(-50%,-50%) rotate(${rot}deg)">${ICON.arrow}</div>` : `<div class="gps-dot"></div>`}
-           </div>`,
+    html: `<div class="gps-puck"><div class="gps-pulse"></div>${inner}</div>`,
     iconSize:[26,26], iconAnchor:[13,13]
   });
 }
@@ -627,6 +879,22 @@ function onLocationUpdate(pos){
   }
   if(navMode){
     setMapRotation(lastHeading);
+  }
+
+  // Panduan suara: umumkan instruksi berikutnya berdasarkan jarak ke titik belokan
+  if(currentRoute && SETTINGS.voice && voiceStepIndex < currentRoute.instructions.length){
+    const ins = currentRoute.instructions[voiceStepIndex];
+    const coordIdx = Math.min(ins.index || 0, currentRoute.coordinates.length - 1);
+    const pt = currentRoute.coordinates[coordIdx];
+    const d = distMeters(latitude, longitude, pt.lat, pt.lng);
+    if(d < 400 && ins._voiceState === 0){
+      ins._voiceState = 1;
+      speak(`Dalam ${Math.round(d/50)*50} meter, ${translateInstruction(ins.text)}`);
+    } else if(d < 40 && ins._voiceState <= 1){
+      ins._voiceState = 2;
+      speak(translateInstruction(ins.text));
+      voiceStepIndex++;
+    }
   }
 
   document.getElementById('inputOrigin').dataset.lat = latitude;
@@ -697,6 +965,68 @@ function selectResult(item, targetInputId){
     map.flyTo(latlng, 14, { duration: 0.9 });
     checkGoEnabled();
   }
+}
+
+/* ================= PENANDA TEMPAT (Saved Places) ================= */
+function refreshSavedPlaceMarkers(){
+  savedPlaceMarkers.forEach(m => map.removeLayer(m));
+  savedPlaceMarkers = PLACES.map(p => {
+    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ className:'pin-saved', html: ICON.pinStar, iconSize:[28,36], iconAnchor:[14,36] }) }).addTo(map);
+    m.on('click', () => usePlaceAsDestination(p));
+    return m;
+  });
+}
+
+function renderPlacesList(){
+  const wrap = document.getElementById('placesList');
+  wrap.innerHTML = '';
+  if(!PLACES.length){
+    wrap.innerHTML = '<div class="empty-hint">Belum ada lokasi tersimpan. Tap tombol di atas, atau tekan &amp; tahan di peta untuk menandai tempat.</div>';
+    return;
+  }
+  PLACES.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'place-item';
+    div.innerHTML = `<div class="place-icon">${ICON.pinSm}</div>
+      <div class="place-name">${p.name}</div>
+      <div class="place-actions">
+        <button class="btn-goto" title="Jadikan tujuan">${ICON.gotoIcon}</button>
+        <button class="btn-del danger" title="Hapus">${ICON.trash}</button>
+      </div>`;
+    div.querySelector('.btn-goto').addEventListener('click', () => usePlaceAsDestination(p));
+    div.querySelector('.btn-del').addEventListener('click', () => deletePlace(p.id));
+    wrap.appendChild(div);
+  });
+}
+
+function usePlaceAsDestination(p){
+  destLatLng = [p.lat, p.lng];
+  if(destMarker) map.removeLayer(destMarker);
+  destMarker = L.marker(destLatLng, { icon: L.divIcon({ className:'pin-dest', html: ICON.pin, iconSize:[34,44], iconAnchor:[17,44] }) }).addTo(map);
+  document.getElementById('inputDest').value = p.name;
+  document.getElementById('menuSheet').classList.remove('show');
+  document.getElementById('directionsPanel').classList.add('show');
+  map.flyTo(destLatLng, 15, { duration:0.9 });
+  checkGoEnabled();
+}
+
+function deletePlace(id){
+  PLACES = PLACES.filter(p => p.id !== id);
+  savePlaces();
+  renderPlacesList();
+  refreshSavedPlaceMarkers();
+}
+
+function openPlaceDialog(lat, lng){
+  pendingPlaceLatLng = { lat, lng };
+  document.getElementById('placeNameInput').value = '';
+  document.getElementById('placeDialog').classList.add('show');
+  setTimeout(() => document.getElementById('placeNameInput').focus(), 60);
+}
+function closePlaceDialog(){
+  document.getElementById('placeDialog').classList.remove('show');
+  if(tempPlaceMarker){ map.removeLayer(tempPlaceMarker); tempPlaceMarker = null; }
+  pendingPlaceLatLng = null;
 }
 
 function checkGoEnabled(){
@@ -774,6 +1104,17 @@ function formatDistance(m){
 function clearRoute(){
   if(routingControl){ map.removeControl(routingControl); routingControl = null; }
   document.getElementById('bottomSheet').classList.remove('show');
+  currentRoute = null;
+  voiceStepIndex = 0;
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function buildExcludeParam(){
+  if(currentMode !== 'car') return null;
+  const ex = [];
+  if(SETTINGS.avoidToll) ex.push('toll');
+  if(SETTINGS.avoidHighway) ex.push('motorway');
+  return ex.length ? ex.join(',') : null;
 }
 
 function tryRouteWithServer(serverIndex){
@@ -786,9 +1127,13 @@ function tryRouteWithServer(serverIndex){
 
   if(routingControl){ map.removeControl(routingControl); routingControl = null; }
 
+  const routerOpts = { serviceUrl: cfg.serviceUrl, profile: cfg.profile, useHints: false };
+  const exclude = buildExcludeParam();
+  if(exclude) routerOpts.requestParameters = { exclude: exclude };
+
   routingControl = L.Routing.control({
     waypoints: [ L.latLng(originLatLng[0], originLatLng[1]), L.latLng(destLatLng[0], destLatLng[1]) ],
-    router: L.Routing.osrmv1({ serviceUrl: cfg.serviceUrl, profile: cfg.profile, useHints: false }),
+    router: L.Routing.osrmv1(routerOpts),
     addWaypoints: false,
     draggableWaypoints: false,
     fitSelectedRoutes: true,
@@ -806,6 +1151,11 @@ function tryRouteWithServer(serverIndex){
     const route = e.routes[0];
     document.getElementById('sumTime').textContent = formatDuration(route.summary.totalTime);
     document.getElementById('sumDist').textContent = formatDistance(route.summary.totalDistance);
+
+    route.instructions.forEach(ins => { ins._voiceState = 0; });
+    currentRoute = route;
+    voiceStepIndex = 0;
+    speak(`Rute ditemukan. Jarak ${formatDistance(route.summary.totalDistance)}, estimasi ${formatDuration(route.summary.totalTime)}.`);
 
     const stepsWrap = document.getElementById('stepsList');
     stepsWrap.innerHTML = '';
@@ -934,12 +1284,98 @@ function init(){
   document.getElementById('btnSheetClose').addEventListener('click', () => {
     clearRoute();
   });
+  document.getElementById('btnVoiceToggle').addEventListener('click', () => {
+    SETTINGS.voice = !SETTINGS.voice;
+    saveSettings();
+    applySettingsToUI();
+    if(!SETTINGS.voice && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+
+  /* ---- Menu Tersimpan & Pengaturan ---- */
+  document.getElementById('btnMenu').addEventListener('click', () => {
+    document.getElementById('menuSheet').classList.add('show');
+    renderPlacesList();
+  });
+  document.getElementById('btnMenuClose').addEventListener('click', () => {
+    document.getElementById('menuSheet').classList.remove('show');
+  });
+  document.querySelectorAll('.menu-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tabPlaces').style.display = tab.dataset.tab === 'places' ? 'block' : 'none';
+      document.getElementById('tabSettings').style.display = tab.dataset.tab === 'settings' ? 'block' : 'none';
+    });
+  });
+
+  /* ---- Toggle setelan (Suara, Hindari Tol/Raya/Macet) ---- */
+  document.querySelectorAll('.toggle-switch[data-setting]').forEach(el => {
+    el.addEventListener('click', () => {
+      const key = el.dataset.setting;
+      SETTINGS[key] = !SETTINGS[key];
+      el.classList.toggle('on', SETTINGS[key]);
+      saveSettings();
+      if(key === 'voice'){
+        applySettingsToUI();
+        if(!SETTINGS.voice && 'speechSynthesis' in window){ window.speechSynthesis.cancel(); }
+      }
+      if((key === 'avoidToll' || key === 'avoidHighway') && routingControl){ computeRoute(); }
+    });
+  });
+
+  /* ---- Pilihan ikon GPS (motor/mobil/sepeda/orang) ---- */
+  document.querySelectorAll('.gps-chip[data-icon]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.gps-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      SETTINGS.gpsIconType = el.dataset.icon;
+      saveSettings();
+      if(gpsMarker) gpsMarker.setIcon(buildGpsIcon(lastFix ? lastHeading : null));
+    });
+  });
+
+  /* ---- Dialog simpan penanda tempat ---- */
+  document.getElementById('btnAddCurrentPlace').addEventListener('click', () => {
+    if(!gpsMarker){ showToast('Lokasi GPS belum tersedia', false); return; }
+    const ll = gpsMarker.getLatLng();
+    openPlaceDialog(ll.lat, ll.lng);
+  });
+  document.getElementById('btnPlaceCancel').addEventListener('click', closePlaceDialog);
+  document.getElementById('btnPlaceSave').addEventListener('click', () => {
+    const name = document.getElementById('placeNameInput').value.trim();
+    if(!name || !pendingPlaceLatLng) return;
+    PLACES.push({ id: 'p' + Date.now(), name, lat: pendingPlaceLatLng.lat, lng: pendingPlaceLatLng.lng });
+    savePlaces();
+    renderPlacesList();
+    refreshSavedPlaceMarkers();
+    closePlaceDialog();
+    showToast('Lokasi disimpan', false);
+  });
+
+  /* ---- Tekan & tahan di peta untuk menandai lokasi ---- */
+  map.on('mousedown', (e) => {
+    pressLatLng = e.latlng;
+    pressTimer = setTimeout(() => {
+      if(!pressLatLng) return;
+      if(tempPlaceMarker) map.removeLayer(tempPlaceMarker);
+      tempPlaceMarker = L.marker(pressLatLng, { icon: L.divIcon({ className:'pin-saved', html: ICON.pinStar, iconSize:[28,36], iconAnchor:[14,36] }) }).addTo(map);
+      openPlaceDialog(pressLatLng.lat, pressLatLng.lng);
+    }, 600);
+  });
+  map.on('drag mousemove', () => { clearTimeout(pressTimer); });
+  map.on('mouseup', () => { clearTimeout(pressTimer); });
 
   document.addEventListener('click', (e) => {
     if(!e.target.closest('#searchPillWrap') && !e.target.closest('#searchResults') && !e.target.closest('#directionsPanel')){
       document.getElementById('searchResults').classList.remove('open');
     }
   });
+
+  // muat setelan & penanda tempat tersimpan dari localStorage
+  loadSettings();
+  loadPlaces();
+  applySettingsToUI();
+  refreshSavedPlaceMarkers();
 
   // auto request location on load
   requestGeolocation();
