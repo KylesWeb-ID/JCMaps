@@ -220,14 +220,17 @@ body{background:var(--navy);}
 #bottomSheet.show{transform:translateY(0);}
 #bottomSheet.expanded{max-height:80vh;}
 .sheet-handle{width:40px;height:4px;border-radius:4px;background:var(--line);margin:10px auto 4px;cursor:pointer;}
-.sheet-summary{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 14px;border-bottom:1px solid var(--line);}
+.sheet-summary{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 14px;border-bottom:1px solid var(--line);cursor:pointer;}
 .sheet-summary .sum-left{display:flex;flex-direction:column;}
 .sum-time{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--cream);}
 .sum-sub{font-size:12.5px;color:var(--gray);display:flex;align-items:center;gap:6px;margin-top:2px;}
 .sum-sub svg{width:14px;height:14px;}
 .sheet-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .sheet-close:active{transform:scale(0.88);}
-#stepsList{overflow-y:auto;padding:6px 8px 18px;}
+#stepsList{overflow-y:hidden;padding:0 8px;max-height:0;opacity:0;transition:max-height .32s ease, opacity .2s ease, padding .32s ease;}
+#bottomSheet.expanded #stepsList{overflow-y:auto;max-height:52vh;opacity:1;padding:6px 8px 18px;}
+.sheet-chevron{width:18px;height:18px;color:var(--gray);transition:transform .3s ease;margin-left:8px;}
+#bottomSheet.expanded .sheet-chevron{transform:rotate(180deg);}
 .step-item{
   display:flex;align-items:flex-start;gap:12px;padding:10px 10px;border-radius:12px;
   animation:fadeInUp .25s ease both;
@@ -381,6 +384,7 @@ body{background:var(--navy);}
         <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>
       </button>
     </div>
+    <svg class="icon sheet-chevron" id="sheetChevron" viewBox="0 0 24 24" style="display:block;margin:0 auto 4px;"><path d="M6 9 L12 15 L18 9"/></svg>
     <div id="stepsList"></div>
   </div>
 </div>
@@ -655,6 +659,37 @@ function buildStepIcon(type, modifier){
   return ICON.straight;
 }
 
+function translateInstruction(text){
+  if(!text) return '';
+  const dirMap = { northeast:'timur laut', northwest:'barat laut', southeast:'tenggara', southwest:'barat daya', north:'utara', south:'selatan', east:'timur', west:'barat' };
+  let t = text;
+  t = t.replace(/^Head (northeast|northwest|southeast|southwest|north|south|east|west)/i, (m,d)=> 'Menuju arah ' + (dirMap[d.toLowerCase()] || d));
+  t = t.replace(/^Turn slight left/i, 'Belok sedikit ke kiri');
+  t = t.replace(/^Turn slight right/i, 'Belok sedikit ke kanan');
+  t = t.replace(/^Turn sharp left/i, 'Belok tajam ke kiri');
+  t = t.replace(/^Turn sharp right/i, 'Belok tajam ke kanan');
+  t = t.replace(/^Turn left/i, 'Belok kiri');
+  t = t.replace(/^Turn right/i, 'Belok kanan');
+  t = t.replace(/^Continue straight/i, 'Lurus terus');
+  t = t.replace(/^Continue onto/i, 'Lanjutkan menuju');
+  t = t.replace(/^Continue/i, 'Lanjutkan');
+  t = t.replace(/^Keep left/i, 'Ambil jalur kiri');
+  t = t.replace(/^Keep right/i, 'Ambil jalur kanan');
+  t = t.replace(/^Merge left/i, 'Bergabung ke kiri');
+  t = t.replace(/^Merge right/i, 'Bergabung ke kanan');
+  t = t.replace(/^Merge/i, 'Bergabung');
+  t = t.replace(/^Make a U-?turn/i, 'Putar balik');
+  t = t.replace(/^Enter the roundabout and take the (\d+)\w* exit/i, 'Masuk bundaran, ambil keluar ke-$1');
+  t = t.replace(/^Enter the roundabout/i, 'Masuk bundaran');
+  t = t.replace(/^Exit the roundabout/i, 'Keluar dari bundaran');
+  t = t.replace(/^Take exit (\d+)/i, 'Ambil keluar ke-$1');
+  t = t.replace(/^You have arrived at your destination.*/i, 'Anda telah tiba di tujuan');
+  t = t.replace(/^Waypoint \d+ reached/i, 'Titik transit tercapai');
+  t = t.replace(/ to stay on/i, ' agar tetap di');
+  t = t.replace(/ onto /i, ' menuju ');
+  return t;
+}
+
 function formatDuration(sec){
   const min = Math.round(sec/60);
   if(min < 60) return `${min} menit`;
@@ -709,10 +744,14 @@ function tryRouteWithServer(serverIndex){
       div.className = 'step-item';
       div.style.animationDelay = (idx*0.03)+'s';
       div.innerHTML = `<div class="step-icon">${buildStepIcon(ins.type, ins.modifier)}</div>
-        <div><div class="step-text">${ins.text}</div><div class="step-dist">${formatDistance(ins.distance)}</div></div>`;
+        <div><div class="step-text">${translateInstruction(ins.text)}</div><div class="step-dist">${formatDistance(ins.distance)}</div></div>`;
       stepsWrap.appendChild(div);
     });
 
+    // Sembunyikan panel pencarian/arah supaya peta & rute terlihat penuh, bukan ketutupan
+    document.getElementById('directionsPanel').classList.remove('show');
+    document.getElementById('searchResults').classList.remove('open');
+    document.getElementById('bottomSheet').classList.remove('expanded');
     document.getElementById('bottomSheet').classList.add('show');
     followMode = false;
     document.getElementById('btnLocate').classList.remove('active');
@@ -807,6 +846,10 @@ function init(){
   document.getElementById('btnZoomOut').addEventListener('click', () => map.zoomOut());
 
   document.getElementById('sheetHandle').addEventListener('click', () => {
+    document.getElementById('bottomSheet').classList.toggle('expanded');
+  });
+  document.querySelector('.sheet-summary').addEventListener('click', (e) => {
+    if(e.target.closest('#btnSheetClose')) return;
     document.getElementById('bottomSheet').classList.toggle('expanded');
   });
   document.getElementById('btnSheetClose').addEventListener('click', () => {
