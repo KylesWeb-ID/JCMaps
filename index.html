@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.css" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=Open+Sans:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
 :root{
@@ -19,6 +19,9 @@
   --amber-dim:#B97F22;
   --teal:#2EC4B6;
   --teal-bright:#3FE0D0;
+  --accent: var(--teal);
+  --accent-bright: var(--teal-bright);
+  --user-font: 'Inter', sans-serif;
   --cream:#F6F4EE;
   --gray:#7C8896;
   --line:#2A3D52;
@@ -28,6 +31,7 @@
   --shadow-soft: 0 6px 18px rgba(6,12,20,0.28), 0 1px 0 rgba(255,255,255,0.03) inset;
   --glow-teal: 0 0 0 1px rgba(46,196,182,0.25), 0 8px 24px rgba(46,196,182,0.22);
 }
+body.custom-font, body.custom-font *{ font-family: var(--user-font) !important; }
 
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;height:100%;overflow:hidden;font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;}
@@ -88,7 +92,7 @@ body{background:var(--navy);}
 }
 .iconbtn:hover{background:rgba(255,255,255,0.13);}
 .iconbtn:active{transform:scale(0.88);}
-.iconbtn.accent{background:linear-gradient(135deg, var(--teal-bright), var(--teal));color:var(--navy);box-shadow:var(--glow-teal);}
+.iconbtn.accent{background:linear-gradient(135deg, var(--accent-bright), var(--accent));color:var(--navy);box-shadow:var(--glow-teal);}
 
 /* dropdown results */
 #searchResults{
@@ -133,7 +137,7 @@ body{background:var(--navy);}
 #directionsPanel.show{display:flex;}
 .field-row{display:flex;align-items:center;gap:10px;}
 .field-dots{display:flex;flex-direction:column;align-items:center;gap:3px;width:14px;}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--teal);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
 .dot.dest{background:var(--amber);border-radius:2px;}
 .dotline{width:2px;height:20px;background:var(--line);}
 .fields{flex:1;display:flex;flex-direction:column;gap:8px;}
@@ -145,7 +149,7 @@ body{background:var(--navy);}
   color:var(--cream);font-size:13.5px;font-family:'Inter',sans-serif;
   outline:none;transition:border-color .2s ease;
 }
-.field-input:focus{border-color:var(--teal);}
+.field-input:focus{border-color:var(--accent);}
 .field-input::placeholder{color:var(--gray);}
 .swapbtn{
   width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
@@ -164,12 +168,12 @@ body{background:var(--navy);}
   transition:all .22s cubic-bezier(.4,1.2,.6,1);
 }
 .modebtn svg{width:15px;height:15px;}
-.modebtn.active{background:linear-gradient(135deg, var(--teal-bright), var(--teal));color:var(--navy);box-shadow:0 3px 10px rgba(46,196,182,0.35);}
+.modebtn.active{background:linear-gradient(135deg, var(--accent-bright), var(--accent));color:var(--navy);box-shadow:0 3px 10px rgba(46,196,182,0.35);}
 .modebtn:active{transform:scale(0.95);}
 
 .gobtn{
   position:relative;overflow:hidden;
-  background:linear-gradient(135deg, var(--teal-bright), var(--teal) 55%, #1f9a8d);
+  background:linear-gradient(135deg, var(--accent-bright), var(--accent) 55%, #1f9a8d);
   color:var(--navy);border:none;border-radius:12px;
   padding:12px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
@@ -195,7 +199,7 @@ body{background:var(--navy);}
 }
 .sidebtn:hover{background:rgba(30,51,72,0.92);}
 .sidebtn:active{transform:scale(0.88);}
-.sidebtn.active{background:linear-gradient(135deg, var(--teal-bright), var(--teal));color:var(--navy);border-color:transparent;box-shadow:var(--glow-teal);}
+.sidebtn.active{background:linear-gradient(135deg, var(--accent-bright), var(--accent));color:var(--navy);border-color:transparent;box-shadow:var(--glow-teal);}
 .zoomgroup{display:flex;flex-direction:column;background:rgba(22,39,58,0.88);backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-soft);}
 .zoombtn{width:44px;height:40px;border:none;background:transparent;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s ease;}
 .zoombtn:first-child{border-bottom:1px solid var(--line);}
@@ -214,7 +218,7 @@ body{background:var(--navy);}
 }
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
 #toast svg{color:var(--amber);min-width:18px;}
-#toast .toastbtn{margin-left:6px;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;}
+#toast .toastbtn{margin-left:6px;background:var(--accent);color:var(--navy);border:none;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;}
 
 /* ---------- BOTTOM SHEET ---------- */
 #bottomSheet{
@@ -248,7 +252,7 @@ body{background:var(--navy);}
 .step-item:hover{background:rgba(255,255,255,0.04);}
 .step-icon{
   width:32px;height:32px;min-width:32px;border-radius:50%;
-  background:rgba(46,196,182,0.14);color:var(--teal);
+  background:rgba(46,196,182,0.14);color:var(--accent);
   display:flex;align-items:center;justify-content:center;margin-top:2px;
 }
 .step-icon svg{width:16px;height:16px;}
@@ -268,7 +272,7 @@ body{background:var(--navy);}
 .gps-dot{
   position:absolute;top:50%;left:50%;width:16px;height:16px;
   transform:translate(-50%,-50%);border-radius:50%;
-  background:var(--teal);border:3px solid #fff;
+  background:var(--accent);border:3px solid #fff;
   box-shadow:0 2px 6px rgba(0,0,0,0.4);
 }
 .gps-arrow{
@@ -276,7 +280,7 @@ body{background:var(--navy);}
   transform:translate(-50%,-50%) rotate(0deg);
   transition:transform .35s ease;
 }
-.gps-arrow svg{width:100%;height:100%;color:var(--teal);filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+.gps-arrow svg{width:100%;height:100%;color:var(--accent);filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
 
 .leaflet-marker-icon{transition:transform 0.55s linear;}
 
@@ -290,7 +294,7 @@ body{background:var(--navy);}
 @keyframes fadeIn{0%{opacity:0;}100%{opacity:1;}}
 @keyframes fadeInUp{0%{opacity:0;transform:translateY(6px);}100%{opacity:1;transform:translateY(0);}}
 @keyframes spin{to{transform:rotate(360deg);}}
-.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 
 /* scrollbar */
 #searchResults::-webkit-scrollbar, #stepsList::-webkit-scrollbar{width:5px;}
@@ -312,7 +316,7 @@ body{background:var(--navy);}
   background:rgba(255,255,255,0.03);color:var(--gray);font-family:'Space Grotesk',sans-serif;
   font-weight:600;font-size:13px;cursor:pointer;transition:all .18s ease;
 }
-.menu-tab.active{background:var(--teal);border-color:var(--teal);color:var(--navy);}
+.menu-tab.active{background:var(--accent);border-color:var(--accent);color:var(--navy);}
 .menu-close{position:absolute;top:10px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;}
 .menu-close:active{transform:scale(0.88);}
 .menu-content{overflow-y:auto;padding:14px 16px 22px;}
@@ -320,8 +324,8 @@ body{background:var(--navy);}
 /* saved places list */
 .place-add-btn{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:11px;border-radius:12px;border:1px dashed var(--teal);
-  background:rgba(46,196,182,0.08);color:var(--teal);font-weight:700;font-size:13.5px;
+  width:100%;padding:11px;border-radius:12px;border:1px dashed var(--accent);
+  background:rgba(46,196,182,0.08);color:var(--accent);font-weight:700;font-size:13.5px;
   cursor:pointer;margin-bottom:12px;transition:background .18s ease;
 }
 .place-add-btn:active{transform:scale(0.98);}
@@ -347,7 +351,7 @@ body{background:var(--navy);}
   animation:fadeInUp .22s ease both;
 }
 .history-item:last-child{border-bottom:none;}
-.history-icon{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(46,196,182,0.12);color:var(--teal);display:flex;align-items:center;justify-content:center;}
+.history-icon{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(46,196,182,0.12);color:var(--accent);display:flex;align-items:center;justify-content:center;}
 .history-icon svg{width:18px;height:18px;}
 .history-body{flex:1;min-width:0;}
 .history-route{color:var(--cream);font-size:13.5px;font-weight:600;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
@@ -365,7 +369,7 @@ body{background:var(--navy);}
 .toggle-hint{color:var(--gray);font-size:11px;margin-top:2px;}
 .toggle-switch{width:44px;height:26px;min-width:44px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .2s ease;}
 .toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--cream);transition:transform .22s cubic-bezier(.4,1.4,.6,1);box-shadow:0 2px 4px rgba(0,0,0,0.3);}
-.toggle-switch.on{background:var(--teal);}
+.toggle-switch.on{background:var(--accent);}
 .toggle-switch.on::after{transform:translateX(18px);}
 
 .gps-chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;}
@@ -376,8 +380,65 @@ body{background:var(--navy);}
 }
 .gps-chip svg,.gps-chip .chip-icon{width:26px;height:26px;}
 .gps-chip span{font-size:11px;font-weight:600;}
-.gps-chip.active{border-color:var(--teal);background:rgba(46,196,182,0.12);color:var(--teal);}
+.gps-chip.active{border-color:var(--accent);background:rgba(46,196,182,0.12);color:var(--accent);}
 .gps-chip:active{transform:scale(0.95);}
+
+.font-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.font-chip{
+  padding:8px 12px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);color:var(--gray);cursor:pointer;
+  font-size:12px;font-weight:600;transition:all .18s ease;
+}
+.font-chip.active{border-color:var(--accent);background:rgba(46,196,182,0.12);color:var(--accent);}
+.font-chip:active{transform:scale(0.95);}
+
+.color-swatches{display:flex;gap:12px;}
+.color-swatch{
+  width:34px;height:34px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  transition:transform .18s ease, border-color .18s ease;
+}
+.color-swatch.active{border-color:#fff;transform:scale(1.12);}
+.color-swatch:active{transform:scale(0.9);}
+
+/* badge kecepatan real-time */
+.sum-speed-badge{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(46,196,182,0.12);border:1px solid rgba(46,196,182,0.35);
+  border-radius:12px;padding:6px 12px;color:var(--accent);
+  font-family:'Space Grotesk',sans-serif;
+}
+.sum-speed-badge .val{font-size:17px;font-weight:700;line-height:1;}
+.sum-speed-badge .unit{font-size:9px;color:var(--gray);letter-spacing:0.5px;margin-top:1px;}
+.sum-arrival{color:var(--gray);font-size:11.5px;margin-top:3px;}
+.sum-avgspeed{color:var(--gray);}
+
+/* overlay lintang/bujur */
+#coordsOverlay{
+  position:absolute;left:14px;bottom:14px;z-index:850;
+  background:rgba(22,39,58,0.85);backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:10px;padding:6px 10px;
+  color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:11px;
+  pointer-events:none;display:none;
+}
+
+/* efek neon */
+body.neon-mode .searchpill,
+body.neon-mode #directionsPanel,
+body.neon-mode #bottomSheet,
+body.neon-mode #menuSheet{
+  border-color:var(--accent-bright);
+  box-shadow:0 0 8px var(--accent-bright), 0 0 22px var(--accent-bright), var(--shadow);
+}
+body.neon-mode .wordmark{ text-shadow:0 0 6px var(--accent-bright), 0 0 16px var(--accent-bright); }
+body.neon-mode .gobtn,
+body.neon-mode .iconbtn.accent,
+body.neon-mode .sidebtn.active,
+body.neon-mode .modebtn.active,
+body.neon-mode .logo-mark{
+  box-shadow:0 0 8px var(--accent-bright), 0 0 20px var(--accent-bright);
+}
+body.neon-mode .sum-time{ text-shadow:0 0 10px var(--accent-bright); }
 
 /* place dialog */
 #placeDialog{
@@ -396,7 +457,7 @@ body{background:var(--navy);}
 .dialog-actions{display:flex;gap:10px;margin-top:14px;}
 .dialog-actions button{flex:1;padding:10px;border-radius:10px;border:none;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;}
 .dialog-actions .btn-cancel{background:rgba(255,255,255,0.06);color:var(--cream);}
-.dialog-actions .btn-save{background:var(--teal);color:var(--navy);}
+.dialog-actions .btn-save{background:var(--accent);color:var(--navy);}
 .dialog-actions button:active{transform:scale(0.96);}
 
 /* saved place pin on map */
@@ -416,6 +477,7 @@ body{background:var(--navy);}
 <body>
 <div id="app">
   <div id="mapViewport"><div id="map"></div></div>
+  <div id="coordsOverlay">-- , --</div>
 
   <div id="topbar">
     <div class="searchpill" id="searchPillWrap">
@@ -505,7 +567,13 @@ body{background:var(--navy);}
         <div class="sum-sub">
           <svg class="icon" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M4 19 L9 6 L15 19 L20 6"/></svg>
           <span id="sumDist">--</span>
+          <span id="sumAvgSpeed" class="sum-avgspeed"></span>
         </div>
+        <div class="sum-arrival" id="sumArrival" style="display:none;"></div>
+      </div>
+      <div class="sum-speed-badge" id="sumSpeedBadge" style="display:none;">
+        <span class="val" id="sumSpeedVal">--</span>
+        <span class="unit">KM/JAM</span>
       </div>
       <button class="sheet-close" id="btnVoiceToggle" style="margin-right:6px;" title="Suara navigasi">
         <svg class="icon" id="voiceIcon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M4 9 v6 h4 l5 4 V5 L8 9 Z"/><path d="M17 8.5 a5 5 0 0 1 0 7"/><path d="M19.5 6 a9 9 0 0 1 0 12"/></svg>
@@ -573,7 +641,7 @@ body{background:var(--navy);}
           Default: JCMaps memakai <b style="color:var(--cream)">Valhalla</b> (mendukung rute alternatif &amp; profil motor asli), otomatis pindah ke OSRM kalau tidak terjangkau. Opsional: isi API key gratis <b style="color:var(--cream)">GraphHopper</b> di bawah untuk hasil hindari tol/jalan raya yang lebih akurat lagi (dipakai duluan kalau diisi).
         </div>
         <input type="text" class="field-input" id="ghKeyInput" placeholder="Tempel API key GraphHopper (opsional)..." style="width:100%;">
-        <a href="https://www.graphhopper.com/dashboard/#/register" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:var(--teal);font-size:12px;font-weight:700;text-decoration:none;">Daftar API key gratis di graphhopper.com →</a>
+        <a href="https://www.graphhopper.com/dashboard/#/register" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:var(--accent);font-size:12px;font-weight:700;text-decoration:none;">Daftar API key gratis di graphhopper.com →</a>
       </div>
 
       <div class="settings-section">
@@ -611,6 +679,52 @@ body{background:var(--navy);}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"/><path d="M9 22 L10.5 15 L8 12 L9.5 8 M15 22 L13.5 14 L16 11 L14.5 8"/></svg>
             <span>Orang</span>
           </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Visual Peta</div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Tampilkan Lintang/Bujur</span></div>
+          <div class="toggle-switch" data-setting="showCoords"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Bangunan 3D (jika tersedia)</span>
+            <span class="toggle-hint">Peta ini pakai tile 2D — mode ini menampilkan gaya gedung berbayang sebagai pendekatan, bukan 3D sungguhan</span>
+          </div>
+          <div class="toggle-switch" data-setting="buildings3d"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Jam Tiba di Estimasi Waktu</span></div>
+          <div class="toggle-switch" data-setting="showClock"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Visual UI</div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Efek Neon</span></div>
+          <div class="toggle-switch" data-setting="neonEffect"></div>
+        </div>
+        <div style="color:var(--gray);font-size:12px;margin:12px 0 6px;">Font Aplikasi</div>
+        <div class="font-chips" id="fontChips">
+          <div class="font-chip" data-font="default">Default</div>
+          <div class="font-chip" data-font="googlesans">Google Sans*</div>
+          <div class="font-chip" data-font="roboto">Roboto</div>
+          <div class="font-chip" data-font="notosans">Noto Sans</div>
+          <div class="font-chip" data-font="opensans">Open Sans</div>
+          <div class="font-chip" data-font="inter">Inter</div>
+          <div class="font-chip" data-font="lato">Lato</div>
+          <div class="font-chip" data-font="oswald">Oswald</div>
+        </div>
+        <div style="color:var(--gray);font-size:10.5px;margin-top:5px;">*Google Sans tidak tersedia untuk publik, dipakai font pengganti mirip (Plus Jakarta Sans)</div>
+        <div style="color:var(--gray);font-size:12px;margin:16px 0 8px;">Warna UI</div>
+        <div class="color-swatches" id="colorSwatches">
+          <div class="color-swatch active" data-color="tosca" style="background:#2EC4B6;" title="Tosca"></div>
+          <div class="color-swatch" data-color="merah" style="background:#E63946;" title="Merah"></div>
+          <div class="color-swatch" data-color="hijau" style="background:#22C55E;" title="Hijau"></div>
+          <div class="color-swatch" data-color="biru" style="background:#3B82F6;" title="Biru"></div>
+          <div class="color-swatch" data-color="gradient" style="background:linear-gradient(135deg,#8B5CF6,#F472B6);" title="Gradient"></div>
         </div>
       </div>
     </div>
@@ -725,13 +839,16 @@ let searchTimer = null;
 let activeSearchTarget = "quick"; // 'quick' | 'origin' | 'dest'
 let currentRouteCoords = [], currentManeuvers = [], voiceStepIndex = 0;
 let lastRouteData = null, lastRouteSource = null, activeTripIndex = 0, routeLayers = [];
+let activeCasing = null, activeTraveled = null, activeRemaining = null, activeFullCoords = [], lastNearestIdx = 0;
+let lastRerouteTime = 0, lastSpeedFix = null;
 let savedPlaceMarkers = [], pendingPlaceLatLng = null, tempPlaceMarker = null;
 let pressTimer = null, pressLatLng = null;
 
 /* ================= SETELAN & PENANDA TEMPAT (localStorage) ================= */
 const SETTINGS_KEY = 'jcmaps_settings';
 const PLACES_KEY = 'jcmaps_places';
-let SETTINGS = { voice:true, avoidToll:false, avoidHighway:false, avoidTraffic:false, gpsIconType:'default', graphhopperKey:'' };
+let SETTINGS = { voice:true, avoidToll:false, avoidHighway:false, avoidTraffic:false, gpsIconType:'default', graphhopperKey:'',
+  showCoords:false, buildings3d:false, showClock:false, neonEffect:false, fontChoice:'default', colorTheme:'tosca' };
 let PLACES = [];
 
 function loadSettings(){
@@ -822,10 +939,55 @@ function applySettingsToUI(){
   document.querySelectorAll('.gps-chip[data-icon]').forEach(el => {
     el.classList.toggle('active', el.dataset.icon === SETTINGS.gpsIconType);
   });
+  document.querySelectorAll('.font-chip[data-font]').forEach(el => {
+    el.classList.toggle('active', el.dataset.font === SETTINGS.fontChoice);
+  });
+  document.querySelectorAll('.color-swatch[data-color]').forEach(el => {
+    el.classList.toggle('active', el.dataset.color === SETTINGS.colorTheme);
+  });
   const vIcon = document.getElementById('voiceIcon');
   if(vIcon) vIcon.innerHTML = SETTINGS.voice ? ICON.speakerOn.replace(/<\/?svg[^>]*>/g,'') : ICON.speakerOff.replace(/<\/?svg[^>]*>/g,'');
   const ghInput = document.getElementById('ghKeyInput');
   if(ghInput && document.activeElement !== ghInput) ghInput.value = SETTINGS.graphhopperKey || '';
+
+  document.body.classList.toggle('neon-mode', !!SETTINGS.neonEffect);
+  applyFontChoice(SETTINGS.fontChoice);
+  applyColorTheme(SETTINGS.colorTheme);
+  document.getElementById('coordsOverlay').style.display = SETTINGS.showCoords ? 'block' : 'none';
+}
+
+/* ---- Font aplikasi ---- */
+const FONT_MAP = {
+  default: "'Inter', 'Space Grotesk', sans-serif",
+  googlesans: "'Plus Jakarta Sans', sans-serif",
+  roboto: "'Roboto', sans-serif",
+  notosans: "'Noto Sans', sans-serif",
+  opensans: "'Open Sans', sans-serif",
+  inter: "'Inter', sans-serif",
+  lato: "'Lato', sans-serif",
+  oswald: "'Oswald', sans-serif"
+};
+function applyFontChoice(key){
+  document.documentElement.style.setProperty('--user-font', FONT_MAP[key] || FONT_MAP.default);
+  document.body.classList.toggle('custom-font', key && key !== 'default');
+}
+
+/* ---- Warna UI ---- */
+const COLOR_THEMES = {
+  tosca:    { accent:'#2EC4B6', bright:'#3FE0D0' },
+  merah:    { accent:'#E63946', bright:'#FF6B6B' },
+  hijau:    { accent:'#22C55E', bright:'#4ADE80' },
+  biru:     { accent:'#3B82F6', bright:'#60A5FA' },
+  gradient: { accent:'#8B5CF6', bright:'#F472B6' }
+};
+function applyColorTheme(key){
+  const t = COLOR_THEMES[key] || COLOR_THEMES.tosca;
+  document.documentElement.style.setProperty('--accent', t.accent);
+  document.documentElement.style.setProperty('--accent-bright', t.bright);
+  if(routeLayers.length) renderRoutes(); // warnai ulang garis rute aktif kalau sedang tampil
+}
+function currentAccentColor(){
+  return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2EC4B6';
 }
 
 /* ================= MAP INIT ================= */
@@ -1031,7 +1193,7 @@ function onLocationUpdate(pos){
   }
 
   if(!gpsCircle){
-    gpsCircle = L.circle(latlng, { radius: accuracy, color:'#2EC4B6', weight:1, fillColor:'#2EC4B6', fillOpacity:0.12 }).addTo(map);
+    gpsCircle = L.circle(latlng, { radius: accuracy, color: currentAccentColor(), weight:1, fillColor: currentAccentColor(), fillOpacity:0.12 }).addTo(map);
   } else {
     gpsCircle.setLatLng(latlng);
     gpsCircle.setRadius(accuracy);
@@ -1058,6 +1220,35 @@ function onLocationUpdate(pos){
       speak(translateInstruction(m.text));
       voiceStepIndex++;
     }
+  }
+
+  // Bagian rute yang sudah dilewati jadi abu-abu (mirip Google Maps) + deteksi keluar rute
+  if(activeFullCoords.length){
+    updateTraveledProgress(latitude, longitude);
+    checkOffRoute(latitude, longitude);
+  }
+
+  // Kecepatan real-time (dari GPS, fallback dihitung dari perpindahan posisi kalau device tidak kirim speed)
+  let speedMs = pos.coords.speed;
+  if(typeof speedMs !== 'number' || isNaN(speedMs) || speedMs < 0){
+    if(lastSpeedFix){
+      const dt = (pos.timestamp - lastSpeedFix.t) / 1000;
+      if(dt > 0.5){
+        speedMs = distMeters(lastSpeedFix.lat, lastSpeedFix.lng, latitude, longitude) / dt;
+      }
+    }
+  }
+  lastSpeedFix = { lat: latitude, lng: longitude, t: pos.timestamp };
+  const speedBadge = document.getElementById('sumSpeedBadge');
+  if(currentManeuvers.length && typeof speedMs === 'number' && !isNaN(speedMs)){
+    speedBadge.style.display = 'flex';
+    document.getElementById('sumSpeedVal').textContent = Math.round(Math.max(0, speedMs) * 3.6);
+  } else if(!currentManeuvers.length){
+    speedBadge.style.display = 'none';
+  }
+
+  if(SETTINGS.showCoords){
+    document.getElementById('coordsOverlay').textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
   }
 
   document.getElementById('inputOrigin').dataset.lat = latitude;
@@ -1269,6 +1460,7 @@ function clearRoute(){
   if(routingControl){ map.removeControl(routingControl); routingControl = null; }
   clearRouteLayers();
   document.getElementById('bottomSheet').classList.remove('show');
+  document.getElementById('sumSpeedBadge').style.display = 'none';
   currentRouteCoords = [];
   currentManeuvers = [];
   voiceStepIndex = 0;
@@ -1294,6 +1486,20 @@ function renderGuidance(coordsLatLng, maneuvers, totalTimeSec, totalDistM){
 
   document.getElementById('sumTime').textContent = formatDuration(totalTimeSec);
   document.getElementById('sumDist').textContent = formatDistance(totalDistM);
+
+  const avgKmh = totalTimeSec > 0 ? (totalDistM/1000) / (totalTimeSec/3600) : 0;
+  document.getElementById('sumAvgSpeed').textContent = avgKmh > 0 ? `· rata-rata ${Math.round(avgKmh)} km/j` : '';
+
+  const arrivalEl = document.getElementById('sumArrival');
+  if(SETTINGS.showClock){
+    const arrival = new Date(Date.now() + totalTimeSec*1000);
+    const jam = String(arrival.getHours()).padStart(2,'0');
+    const mnt = String(arrival.getMinutes()).padStart(2,'0');
+    arrivalEl.textContent = `Tiba sekitar pukul ${jam}:${mnt}`;
+    arrivalEl.style.display = 'block';
+  } else {
+    arrivalEl.style.display = 'none';
+  }
 
   const stepsWrap = document.getElementById('stepsList');
   stepsWrap.innerHTML = '';
@@ -1470,6 +1676,7 @@ function maneuversFromTrip(trip){
 function clearRouteLayers(){
   routeLayers.forEach(l => map.removeLayer(l));
   routeLayers = [];
+  activeCasing = null; activeTraveled = null; activeRemaining = null; activeFullCoords = []; lastNearestIdx = 0;
 }
 
 function renderRoutes(){
@@ -1483,10 +1690,86 @@ function renderRoutes(){
     line.on('click', () => setActiveTrip(idx));
     routeLayers.push(line);
   });
-  const activeCoords = getCoordsGeneric(trips[activeTripIndex]);
-  const casing = L.polyline(activeCoords, { color:'#0E1A24', opacity:0.5, weight:9 }).addTo(map);
-  const mainLine = L.polyline(activeCoords, { color:'#2EC4B6', opacity:0.95, weight:5 }).addTo(map);
-  routeLayers.push(casing, mainLine);
+  activeFullCoords = getCoordsGeneric(trips[activeTripIndex]);
+  lastNearestIdx = 0;
+  const accent = currentAccentColor();
+  // Rute aktif digambar 2 lapis: bagian yang sudah dilewati (abu-abu, seperti Google Maps) + sisa rute (warna tema)
+  activeCasing = L.polyline(activeFullCoords, { color:'#0E1A24', opacity:0.5, weight:9 }).addTo(map);
+  activeTraveled = L.polyline([activeFullCoords[0]], { color:'#9AA6B4', opacity:0.9, weight:5 }).addTo(map);
+  activeRemaining = L.polyline(activeFullCoords, { color: accent, opacity:0.95, weight:5 }).addTo(map);
+  routeLayers.push(activeCasing, activeTraveled, activeRemaining);
+}
+
+/* ---- Perbarui bagian rute yang sudah dilewati jadi abu-abu, mirip Google Maps ---- */
+function nearestIndexOnRoute(pt, coords){
+  const windowStart = Math.max(0, lastNearestIdx - 50);
+  const windowEnd = Math.min(coords.length, lastNearestIdx + 300);
+  let minD = Infinity, minI = lastNearestIdx;
+  for(let i = windowStart; i < windowEnd; i++){
+    const d = distMeters(pt[0], pt[1], coords[i][0], coords[i][1]);
+    if(d < minD){ minD = d; minI = i; }
+  }
+  return minI;
+}
+function updateTraveledProgress(lat, lng){
+  if(!activeFullCoords.length || !activeTraveled || !activeRemaining) return;
+  const idx = nearestIndexOnRoute([lat, lng], activeFullCoords);
+  lastNearestIdx = idx;
+  activeTraveled.setLatLngs(activeFullCoords.slice(0, idx + 1));
+  activeRemaining.setLatLngs(activeFullCoords.slice(idx));
+}
+
+/* ---- Deteksi keluar rute -> otomatis pindah ke rute alternatif, atau hitung ulang ---- */
+function distToSegmentMeters(p, a, b){
+  const toXY = (pt) => [pt[1]*111320*Math.cos(pt[0]*Math.PI/180), pt[0]*110540];
+  const P = toXY(p), A = toXY(a), B = toXY(b);
+  const dx = B[0]-A[0], dy = B[1]-A[1];
+  const lenSq = dx*dx + dy*dy;
+  let t = lenSq ? ((P[0]-A[0])*dx + (P[1]-A[1])*dy) / lenSq : 0;
+  t = Math.max(0, Math.min(1, t));
+  const cx = A[0]+t*dx, cy = A[1]+t*dy;
+  return Math.hypot(P[0]-cx, P[1]-cy);
+}
+function distanceToPolyline(pt, coords){
+  let min = Infinity;
+  for(let i = 0; i < coords.length - 1; i++){
+    const d = distToSegmentMeters(pt, coords[i], coords[i+1]);
+    if(d < min) min = d;
+  }
+  return min;
+}
+async function handleOffRoute(lat, lng){
+  showToast('Anda keluar dari rute, mencari rute baru...', true);
+  speak('Menghitung ulang rute.');
+  // 1) Coba rute alternatif yang sudah ada dulu (cepat, mirip Google Maps)
+  if(lastRouteSource === 'valhalla' && lastRouteData){
+    const trips = getTripsGeneric();
+    for(let i = 0; i < trips.length; i++){
+      if(i === activeTripIndex) continue;
+      const coords = getCoordsGeneric(trips[i]);
+      if(distanceToPolyline([lat, lng], coords) < 60){
+        setActiveTrip(i);
+        hideToast();
+        showToast('Beralih ke rute alternatif', false);
+        return;
+      }
+    }
+  }
+  // 2) Tidak ada alternatif yang cocok -> hitung ulang rute baru dari posisi sekarang (tetap sediakan rute cadangan baru)
+  originLatLng = [lat, lng];
+  document.getElementById('inputOrigin').value = 'Lokasi Anda';
+  document.getElementById('inputOrigin').dataset.auto = '1';
+  await computeRoute();
+}
+function checkOffRoute(lat, lng){
+  if(!activeFullCoords.length) return;
+  const now = Date.now();
+  if(now - lastRerouteTime < 12000) return; // jeda supaya tidak hitung ulang berkali-kali
+  const d = distanceToPolyline([lat, lng], activeFullCoords);
+  if(d > 60){
+    lastRerouteTime = now;
+    handleOffRoute(lat, lng);
+  }
 }
 
 function setActiveTrip(idx){
@@ -1758,6 +2041,45 @@ function init(){
         if(!SETTINGS.voice && 'speechSynthesis' in window){ window.speechSynthesis.cancel(); }
       }
       if((key === 'avoidToll' || key === 'avoidHighway') && (routingControl || lastRouteData)){ computeRoute(); }
+      if(key === 'neonEffect'){ document.body.classList.toggle('neon-mode', SETTINGS.neonEffect); }
+      if(key === 'showCoords'){ document.getElementById('coordsOverlay').style.display = SETTINGS.showCoords ? 'block' : 'none'; }
+      if(key === 'showClock' && currentManeuvers.length){
+        // segarkan tampilan jam tiba tanpa hitung ulang rute
+        const arrivalEl = document.getElementById('sumArrival');
+        if(SETTINGS.showClock){
+          arrivalEl.style.display = 'block';
+        } else {
+          arrivalEl.style.display = 'none';
+        }
+      }
+      if(key === 'buildings3d'){
+        setTileLayer(SETTINGS.buildings3d ? 'voyager' : 'standard');
+        showToast(SETTINGS.buildings3d
+          ? 'Mode bayangan gedung aktif — peta ini 2D, bukan 3D sungguhan'
+          : 'Mode bayangan gedung dimatikan', false);
+      }
+    });
+  });
+
+  /* ---- Font aplikasi ---- */
+  document.querySelectorAll('.font-chip[data-font]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.font-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      SETTINGS.fontChoice = el.dataset.font;
+      saveSettings();
+      applyFontChoice(SETTINGS.fontChoice);
+    });
+  });
+
+  /* ---- Warna UI ---- */
+  document.querySelectorAll('.color-swatch[data-color]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      SETTINGS.colorTheme = el.dataset.color;
+      saveSettings();
+      applyColorTheme(SETTINGS.colorTheme);
     });
   });
 
@@ -1833,3 +2155,5 @@ window.addEventListener('load', init);
 </script>
 </body>
 </html>
+
+
