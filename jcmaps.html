@@ -1,0 +1,2509 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JCMaps — Navigasi Peta</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Roboto:wght@400;500;700&family=Noto+Sans:wght@400;500;700&family=Open+Sans:wght@400;500;600;700&family=Lato:wght@400;700;900&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --navy:#0E1A24;
+  --navy-soft:#16273A;
+  --navy-soft-2:#1E3348;
+  --amber:#F2A93B;
+  --amber-dim:#B97F22;
+  --teal:#2EC4B6;
+  --teal-bright:#3FE0D0;
+  --accent: var(--teal);
+  --accent-bright: var(--teal-bright);
+  --user-font: 'Inter', sans-serif;
+  --cream:#F6F4EE;
+  --gray:#7C8896;
+  --line:#2A3D52;
+  --danger:#E85D5D;
+  --radius:16px;
+  --shadow: 0 10px 30px rgba(6,12,20,0.35);
+  --shadow-soft: 0 6px 18px rgba(6,12,20,0.28), 0 1px 0 rgba(255,255,255,0.03) inset;
+  --glow-teal: 0 0 0 1px rgba(46,196,182,0.25), 0 8px 24px rgba(46,196,182,0.22);
+}
+body.custom-font, body.custom-font *{ font-family: var(--user-font) !important; }
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:var(--navy);}
+
+#app{position:relative;width:100vw;height:100vh;height:100dvh;}
+#mapViewport{position:absolute;inset:0;overflow:hidden;background:#0b141c;}
+#map{position:absolute;top:0;left:0;width:100%;height:100%;background:#0b141c;transform-origin:center center;}
+#map.nav-rotate{top:-60%;left:-60%;width:220%;height:220%;transition:transform .5s linear;}
+
+.leaflet-control-attribution{font-family:'Inter',sans-serif;font-size:10px;background:rgba(14,26,36,0.75)!important;color:#9fb0bf!important;border-radius:8px 0 0 0;}
+.leaflet-control-attribution a{color:#cfe3ee!important;}
+
+/* ---------- ICONS ---------- */
+.icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block;}
+
+/* ---------- TOP BAR ---------- */
+#topbar{
+  position:absolute;top:0;left:0;right:0;
+  padding:16px 16px 0;
+  display:flex;flex-direction:column;gap:10px;
+  z-index:800;
+  pointer-events:none;
+}
+.searchpill{
+  pointer-events:auto;
+  display:flex;align-items:center;gap:10px;
+  background:rgba(22,39,58,0.88);
+  backdrop-filter:blur(14px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:999px;
+  padding:11px 14px;
+  box-shadow:var(--shadow), 0 1px 0 rgba(255,255,255,0.06) inset;
+  transition:box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+}
+.searchpill:focus-within{box-shadow:var(--glow-teal), 0 1px 0 rgba(255,255,255,0.06) inset;border-color:rgba(46,196,182,0.5);}
+.logo-mark{
+  width:36px;height:36px;min-width:36px;border-radius:50%;
+  background:radial-gradient(circle at 30% 25%, #ffcf7a, var(--amber) 55%, var(--amber-dim));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 0 3px rgba(242,169,59,0.15), 0 4px 10px rgba(242,169,59,0.35);
+  transition:transform .3s ease;
+}
+.logo-mark svg{width:18px;height:18px;stroke:var(--navy);}
+#searchInput{
+  flex:1;border:none;outline:none;background:transparent;
+  color:var(--cream);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;
+}
+#searchInput::placeholder{color:var(--gray);}
+.wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--cream);letter-spacing:0.2px;display:none;}
+.iconbtn{
+  pointer-events:auto;
+  width:37px;height:37px;min-width:37px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.06);color:var(--cream);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 1px 0 rgba(255,255,255,0.05) inset;
+  transition:transform .15s ease, background .15s ease, box-shadow .2s ease;
+}
+.iconbtn:hover{background:rgba(255,255,255,0.13);}
+.iconbtn:active{transform:scale(0.88);}
+.iconbtn.accent{background:linear-gradient(135deg, var(--accent-bright), var(--accent));color:var(--navy);box-shadow:var(--glow-teal);}
+
+/* dropdown results */
+#searchResults{
+  pointer-events:auto;
+  background:rgba(22,39,58,0.97);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  max-height:0;
+  transition:max-height .28s ease;
+}
+#searchResults.open{max-height:320px;overflow-y:auto;}
+.result-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;cursor:pointer;
+  border-top:1px solid var(--line);
+  color:var(--cream);font-size:13.5px;
+  animation:fadeIn .2s ease both;
+}
+.result-item:first-child{border-top:none;}
+.result-item:hover{background:rgba(255,255,255,0.05);}
+.result-item svg{color:var(--gray);min-width:18px;}
+.result-item .rname{font-weight:600;}
+.result-item .raddr{color:var(--gray);font-size:11.5px;margin-top:2px;}
+
+/* ---------- DIRECTIONS PANEL ---------- */
+#directionsPanel{
+  pointer-events:auto;
+  background:rgba(22,39,58,0.9);
+  backdrop-filter:blur(16px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  box-shadow:var(--shadow), 0 1px 0 rgba(255,255,255,0.06) inset;
+  padding:14px;
+  display:none;
+  flex-direction:column;
+  gap:10px;
+  animation:slideDown .28s ease both;
+}
+#directionsPanel.show{display:flex;}
+.field-row{display:flex;align-items:center;gap:10px;}
+.field-dots{display:flex;flex-direction:column;align-items:center;gap:3px;width:14px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.dot.dest{background:var(--amber);border-radius:2px;}
+.dotline{width:2px;height:20px;background:var(--line);}
+.fields{flex:1;display:flex;flex-direction:column;gap:8px;}
+.field-input{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:9px 12px;
+  color:var(--cream);font-size:13.5px;font-family:'Inter',sans-serif;
+  outline:none;transition:border-color .2s ease;
+}
+.field-input:focus{border-color:var(--accent);}
+.field-input::placeholder{color:var(--gray);}
+.swapbtn{
+  width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(255,255,255,0.05);color:var(--cream);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .3s ease, background .2s ease;
+}
+.swapbtn:hover{background:rgba(255,255,255,0.1);}
+.swapbtn.spin{transform:rotate(180deg);}
+
+.modebar{display:flex;gap:2px;background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:14px;padding:3px;}
+.modebtn{
+  flex:1;display:flex;align-items:center;justify-content:center;gap:4px;
+  padding:8px 3px;border-radius:11px;border:none;
+  background:transparent;color:var(--gray);cursor:pointer;
+  font-size:11px;font-weight:600;font-family:'Inter',sans-serif;
+  transition:all .22s cubic-bezier(.4,1.2,.6,1);
+}
+.modebtn svg{width:15px;height:15px;}
+.modebtn.active{background:linear-gradient(135deg, var(--accent-bright), var(--accent));color:var(--navy);box-shadow:0 3px 10px rgba(46,196,182,0.35);}
+.modebtn:active{transform:scale(0.95);}
+
+.gobtn{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg, var(--accent-bright), var(--accent) 55%, #1f9a8d);
+  color:var(--navy);border:none;border-radius:12px;
+  padding:12px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 6px 20px rgba(46,196,182,0.35);
+  transition:transform .15s ease, filter .15s ease, box-shadow .2s ease;
+}
+.gobtn:hover{filter:brightness(1.06);box-shadow:0 8px 26px rgba(46,196,182,0.45);}
+.gobtn:active{transform:scale(0.97);}
+.gobtn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
+
+/* ---------- SIDE CONTROLS ---------- */
+#sideControls{
+  position:absolute;right:14px;bottom:110px;z-index:800;
+  display:flex;flex-direction:column;gap:10px;align-items:center;
+}
+.sidebtn{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(22,39,58,0.88);backdrop-filter:blur(10px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.07);color:var(--cream);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:var(--shadow-soft);
+  transition:transform .15s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
+}
+.sidebtn:hover{background:rgba(30,51,72,0.92);}
+.sidebtn:active{transform:scale(0.88);}
+.sidebtn.active{background:linear-gradient(135deg, var(--accent-bright), var(--accent));color:var(--navy);border-color:transparent;box-shadow:var(--glow-teal);}
+.zoomgroup{display:flex;flex-direction:column;background:rgba(22,39,58,0.88);backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-soft);}
+.zoombtn{width:44px;height:40px;border:none;background:transparent;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s ease;}
+.zoombtn:first-child{border-bottom:1px solid var(--line);}
+.zoombtn:hover{background:rgba(255,255,255,0.08);}
+.zoombtn:active{background:rgba(255,255,255,0.14);}
+
+/* ---------- TOAST ---------- */
+#toast{
+  position:absolute;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);
+  background:var(--navy-soft-2);border:1px solid var(--line);color:var(--cream);
+  padding:11px 16px;border-radius:12px;font-size:13px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:var(--shadow);z-index:1000;opacity:0;pointer-events:none;
+  transition:opacity .25s ease, transform .25s ease;
+  max-width:88vw;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
+#toast svg{color:var(--amber);min-width:18px;}
+#toast .toastbtn{margin-left:6px;background:var(--accent);color:var(--navy);border:none;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap;}
+
+/* ---------- BOTTOM SHEET ---------- */
+#bottomSheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:900;
+  background:rgba(22,39,58,0.94);backdrop-filter:blur(16px) saturate(140%);
+  border-top:1px solid rgba(255,255,255,0.08);
+  border-radius:22px 22px 0 0;
+  box-shadow:0 -10px 30px rgba(6,12,20,0.4);
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.22,.9,.32,1);
+  max-height:70vh;display:flex;flex-direction:column;
+}
+#bottomSheet.show{transform:translateY(0);}
+#bottomSheet.expanded{max-height:80vh;}
+.sheet-handle{width:40px;height:4px;border-radius:4px;background:var(--line);margin:10px auto 4px;cursor:pointer;}
+.sheet-summary{display:flex;align-items:center;justify-content:space-between;padding:8px 18px 14px;border-bottom:1px solid var(--line);cursor:pointer;}
+.sheet-summary .sum-left{display:flex;flex-direction:column;}
+.sum-time{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:var(--cream);}
+.sum-sub{font-size:12.5px;color:var(--gray);display:flex;align-items:center;gap:6px;margin-top:2px;}
+.sum-sub svg{width:14px;height:14px;}
+.sheet-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.sheet-close:active{transform:scale(0.88);}
+#stepsList{overflow-y:hidden;padding:0 8px;max-height:0;opacity:0;transition:max-height .32s ease, opacity .2s ease, padding .32s ease;}
+#bottomSheet.expanded #stepsList{overflow-y:auto;max-height:52vh;opacity:1;padding:6px 8px 18px;}
+.sheet-chevron{width:18px;height:18px;color:var(--gray);transition:transform .3s ease;margin-left:8px;}
+#bottomSheet.expanded .sheet-chevron{transform:rotate(180deg);}
+.step-item{
+  display:flex;align-items:flex-start;gap:12px;padding:10px 10px;border-radius:12px;
+  animation:fadeInUp .25s ease both;
+}
+.step-item:hover{background:rgba(255,255,255,0.04);}
+.step-icon{
+  width:32px;height:32px;min-width:32px;border-radius:50%;
+  background:rgba(46,196,182,0.14);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;margin-top:2px;
+}
+.step-icon svg{width:16px;height:16px;}
+.step-text{color:var(--cream);font-size:13.5px;font-weight:500;line-height:1.4;}
+.step-dist{color:var(--gray);font-size:11.5px;margin-top:2px;}
+
+/* ---------- MARKERS ---------- */
+.pin-dest{filter:drop-shadow(0 6px 10px rgba(0,0,0,0.4));animation:dropIn .45s cubic-bezier(.3,1.4,.5,1) both;}
+.pin-origin{filter:drop-shadow(0 4px 8px rgba(0,0,0,0.35));animation:dropIn .4s ease both;}
+.gps-puck{position:relative;width:26px;height:26px;}
+.gps-pulse{
+  position:absolute;top:50%;left:50%;width:26px;height:26px;
+  transform:translate(-50%,-50%);border-radius:50%;
+  background:rgba(46,196,182,0.35);
+  animation:pulse 2.2s ease-out infinite;
+}
+.gps-dot{
+  position:absolute;top:50%;left:50%;width:16px;height:16px;
+  transform:translate(-50%,-50%);border-radius:50%;
+  background:var(--accent);border:3px solid #fff;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4);
+}
+.gps-arrow{
+  position:absolute;top:50%;left:50%;width:34px;height:34px;
+  transform:translate(-50%,-50%) rotate(0deg);
+  transition:transform .35s ease;
+}
+.gps-arrow svg{width:100%;height:100%;color:var(--accent);filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+
+.leaflet-marker-icon{transition:transform 0.55s linear;}
+
+/* route line glow */
+.leaflet-routing-container{display:none!important;}
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes pulse{0%{transform:translate(-50%,-50%) scale(0.5);opacity:0.9;}100%{transform:translate(-50%,-50%) scale(3.4);opacity:0;}}
+@keyframes dropIn{0%{transform:translateY(-24px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+@keyframes slideDown{0%{transform:translateY(-14px);opacity:0;}100%{transform:translateY(0);opacity:1;}}
+@keyframes fadeIn{0%{opacity:0;}100%{opacity:1;}}
+@keyframes fadeInUp{0%{opacity:0;transform:translateY(6px);}100%{opacity:1;transform:translateY(0);}}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.25);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+
+/* scrollbar */
+#searchResults::-webkit-scrollbar, #stepsList::-webkit-scrollbar{width:5px;}
+#searchResults::-webkit-scrollbar-thumb, #stepsList::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+/* ---------- MENU SHEET (Tersimpan & Pengaturan) ---------- */
+#menuSheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:950;
+  background:rgba(22,39,58,0.97);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);border-radius:20px 20px 0 0;
+  box-shadow:0 -10px 30px rgba(6,12,20,0.4);
+  transform:translateY(100%);transition:transform .32s cubic-bezier(.22,.9,.32,1);
+  max-height:78vh;display:flex;flex-direction:column;
+}
+#menuSheet.show{transform:translateY(0);}
+.menu-tabs{display:flex;gap:8px;padding:6px 16px 12px;border-bottom:1px solid var(--line);}
+.menu-tab{
+  flex:1;padding:9px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);color:var(--gray);font-family:'Space Grotesk',sans-serif;
+  font-weight:600;font-size:13px;cursor:pointer;transition:all .18s ease;
+}
+.menu-tab.active{background:var(--accent);border-color:var(--accent);color:var(--navy);}
+.menu-close{position:absolute;top:10px;right:14px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.06);border:none;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:5;}
+.menu-close:active{transform:scale(0.88);}
+.menu-content{overflow-y:auto;padding:14px 16px 22px;}
+
+/* saved places list */
+.place-add-btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:11px;border-radius:12px;border:1px dashed var(--accent);
+  background:rgba(46,196,182,0.08);color:var(--accent);font-weight:700;font-size:13.5px;
+  cursor:pointer;margin-bottom:12px;transition:background .18s ease;
+}
+.place-add-btn:active{transform:scale(0.98);}
+.place-item{display:flex;align-items:center;gap:12px;padding:11px 4px;border-bottom:1px solid var(--line);animation:fadeInUp .22s ease both;}
+.place-item:last-child{border-bottom:none;}
+.place-icon{width:34px;height:34px;min-width:34px;border-radius:10px;background:rgba(242,169,59,0.14);color:var(--amber);display:flex;align-items:center;justify-content:center;}
+.place-icon svg{width:18px;height:18px;}
+.place-name{flex:1;color:var(--cream);font-size:13.5px;font-weight:600;}
+.place-actions{display:flex;gap:6px;}
+.place-actions button{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,0.04);color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.place-actions button:active{transform:scale(0.9);}
+.place-actions button.danger{color:var(--danger);}
+.empty-hint{color:var(--gray);font-size:13px;text-align:center;padding:20px 10px;}
+
+/* riwayat perjalanan */
+.history-header{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 12px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+.history-back{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--cream);font-weight:700;font-size:13.5px;cursor:pointer;padding:4px 2px;}
+.history-back:active{opacity:0.7;}
+.history-clear{display:flex;align-items:center;gap:6px;background:rgba(232,93,93,0.1);border:1px solid rgba(232,93,93,0.3);color:var(--danger);font-weight:700;font-size:11.5px;border-radius:9px;padding:7px 10px;cursor:pointer;}
+.history-clear:active{transform:scale(0.94);}
+.history-item{
+  display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);
+  animation:fadeInUp .22s ease both;
+}
+.history-item:last-child{border-bottom:none;}
+.history-icon{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(46,196,182,0.12);color:var(--accent);display:flex;align-items:center;justify-content:center;}
+.history-icon svg{width:18px;height:18px;}
+.history-body{flex:1;min-width:0;}
+.history-route{color:var(--cream);font-size:13.5px;font-weight:600;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.history-meta{color:var(--gray);font-size:11.5px;margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.history-meta .dot-sep{width:3px;height:3px;border-radius:50%;background:var(--gray);display:inline-block;}
+.history-time{color:var(--gray);font-size:11px;font-family:'Space Grotesk',sans-serif;white-space:nowrap;padding-top:1px;}
+
+/* settings sections */
+.settings-section{margin-bottom:18px;}
+.settings-title{font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-text{display:flex;flex-direction:column;}
+.toggle-label{color:var(--cream);font-size:13.5px;font-weight:600;}
+.toggle-hint{color:var(--gray);font-size:11px;margin-top:2px;}
+
+/* titik taksi (multi-stop) */
+.taxi-stop-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.taxi-stop-dot{width:8px;height:8px;min-width:8px;border-radius:2px;background:var(--amber);}
+.taxi-stop-row .field-input{flex:1;}
+.stop-remove-btn{width:28px;height:28px;min-width:28px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,0.05);color:var(--gray);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.stop-remove-btn:active{transform:scale(0.9);}
+
+/* badge kategori tempat (mode kurir) */
+.place-category-badge{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;
+  display:inline-block;margin-top:3px;
+}
+.cat-gudang{background:rgba(242,169,59,0.15);color:var(--amber);}
+.cat-transit{background:rgba(59,130,246,0.15);color:#60A5FA;}
+.cat-rumah{background:rgba(46,196,182,0.15);color:var(--accent);}
+.toggle-switch{width:44px;height:26px;min-width:44px;border-radius:999px;background:var(--line);position:relative;cursor:pointer;transition:background .2s ease;}
+.toggle-switch::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--cream);transition:transform .22s cubic-bezier(.4,1.4,.6,1);box-shadow:0 2px 4px rgba(0,0,0,0.3);}
+.toggle-switch.on{background:var(--accent);}
+.toggle-switch.on::after{transform:translateX(18px);}
+
+.gps-chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;}
+.gps-chip{
+  min-width:68px;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:10px 8px;border-radius:12px;border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);color:var(--gray);cursor:pointer;transition:all .18s ease;
+}
+.gps-chip svg,.gps-chip .chip-icon{width:26px;height:26px;}
+.gps-chip span{font-size:11px;font-weight:600;}
+.gps-chip.active{border-color:var(--accent);background:rgba(46,196,182,0.12);color:var(--accent);}
+.gps-chip:active{transform:scale(0.95);}
+
+.font-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.font-chip{
+  padding:8px 12px;border-radius:10px;border:1px solid var(--line);
+  background:rgba(255,255,255,0.03);color:var(--gray);cursor:pointer;
+  font-size:12px;font-weight:600;transition:all .18s ease;
+}
+.font-chip.active{border-color:var(--accent);background:rgba(46,196,182,0.12);color:var(--accent);}
+.font-chip:active{transform:scale(0.95);}
+
+.color-swatches{display:flex;gap:12px;}
+.color-swatch{
+  width:34px;height:34px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  transition:transform .18s ease, border-color .18s ease;
+}
+.color-swatch.active{border-color:#fff;transform:scale(1.12);}
+.color-swatch:active{transform:scale(0.9);}
+
+/* badge kecepatan real-time */
+.sum-speed-badge{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(46,196,182,0.12);border:1px solid rgba(46,196,182,0.35);
+  border-radius:12px;padding:6px 12px;color:var(--accent);
+  font-family:'Space Grotesk',sans-serif;
+}
+.sum-speed-badge .val{font-size:17px;font-weight:700;line-height:1;}
+.sum-speed-badge .unit{font-size:9px;color:var(--gray);letter-spacing:0.5px;margin-top:1px;}
+.sum-arrival{color:var(--gray);font-size:11.5px;margin-top:3px;}
+.sum-avgspeed{color:var(--gray);}
+
+/* overlay lintang/bujur */
+#coordsOverlay{
+  position:absolute;left:14px;bottom:14px;z-index:850;
+  background:rgba(22,39,58,0.85);backdrop-filter:blur(8px);
+  border:1px solid var(--line);border-radius:10px;padding:6px 10px;
+  color:var(--cream);font-family:'Space Grotesk',sans-serif;font-size:11px;
+  pointer-events:none;display:none;
+}
+
+/* efek neon */
+body.neon-mode .searchpill,
+body.neon-mode #directionsPanel,
+body.neon-mode #bottomSheet,
+body.neon-mode #menuSheet{
+  border-color:var(--accent-bright);
+  box-shadow:0 0 8px var(--accent-bright), 0 0 22px var(--accent-bright), var(--shadow);
+}
+body.neon-mode .wordmark{ text-shadow:0 0 6px var(--accent-bright), 0 0 16px var(--accent-bright); }
+body.neon-mode .gobtn,
+body.neon-mode .iconbtn.accent,
+body.neon-mode .sidebtn.active,
+body.neon-mode .modebtn.active,
+body.neon-mode .logo-mark{
+  box-shadow:0 0 8px var(--accent-bright), 0 0 20px var(--accent-bright);
+}
+body.neon-mode .sum-time{ text-shadow:0 0 10px var(--accent-bright); }
+
+/* place dialog */
+#placeDialog{
+  position:absolute;inset:0;z-index:1100;
+  background:rgba(6,12,20,0.55);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+  animation:fadeIn .2s ease both;
+}
+#placeDialog.show{display:flex;}
+.dialog-card{
+  width:100%;max-width:340px;background:var(--navy-soft-2);border:1px solid var(--line);
+  border-radius:16px;padding:18px;box-shadow:var(--shadow);
+  animation:dropIn .28s cubic-bezier(.3,1.2,.5,1) both;
+}
+.dialog-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:16px;color:var(--cream);margin-bottom:12px;}
+.dialog-actions{display:flex;gap:10px;margin-top:14px;}
+.dialog-actions button{flex:1;padding:10px;border-radius:10px;border:none;font-weight:700;font-size:13.5px;cursor:pointer;font-family:'Inter',sans-serif;}
+.dialog-actions .btn-cancel{background:rgba(255,255,255,0.06);color:var(--cream);}
+.dialog-actions .btn-save{background:var(--accent);color:var(--navy);}
+.dialog-actions button:active{transform:scale(0.96);}
+
+/* saved place pin on map */
+.pin-saved{filter:drop-shadow(0 5px 9px rgba(0,0,0,0.4));animation:dropIn .4s ease both;}
+
+/* ---------- RESPONSIVE ---------- */
+@media (min-width:640px){
+  #topbar{max-width:420px;}
+  #directionsPanel{max-width:420px;}
+  #searchResults{max-width:420px;}
+  .wordmark{display:block;}
+  #bottomSheet{left:14px;right:auto;width:400px;border-radius:20px;bottom:14px;box-shadow:var(--shadow);}
+  #menuSheet{left:14px;right:auto;width:400px;border-radius:20px;bottom:14px;box-shadow:var(--shadow);}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="mapViewport"><div id="map"></div></div>
+  <div id="coordsOverlay">-- , --</div>
+
+  <div id="topbar">
+    <div class="searchpill" id="searchPillWrap">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L18 21 L12 17 L6 21 Z"/></svg>
+      </div>
+      <span class="wordmark">JCMaps</span>
+      <input type="text" id="searchInput" placeholder="Cari tempat atau alamat...">
+      <button class="iconbtn" id="btnDirectionsToggle" title="Rute">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M4 19 L9 6 L15 19 L20 6"/><path d="M7 13 h5"/></svg>
+      </button>
+    </div>
+
+    <div id="searchResults"></div>
+
+    <div id="directionsPanel">
+      <div class="field-row">
+        <div class="field-dots">
+          <div class="dot" id="dotOrigin"></div>
+          <div class="dotline"></div>
+          <div class="dot dest" id="dotDest"></div>
+        </div>
+        <div class="fields">
+          <input class="field-input" id="inputOrigin" placeholder="Lokasi asal...">
+          <input class="field-input" id="inputDest" placeholder="Tujuan...">
+        </div>
+        <button class="swapbtn" id="btnSwap" title="Tukar">
+          <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M7 3 L7 21"/><path d="M3 7 L7 3 L11 7"/><path d="M17 21 L17 3"/><path d="M13 17 L17 21 L21 17"/></svg>
+        </button>
+      </div>
+
+      <div id="taxiStopsSection" style="display:none;">
+        <div id="taxiStopsList"></div>
+        <button class="place-add-btn" id="btnAddStop" style="margin-top:6px;">+ Tambah Titik (mis. B, C, ...)</button>
+      </div>
+
+      <div class="modebar">
+        <button class="modebtn active" data-mode="car">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 h14 M5 17 a1.5 1.5 0 0 1 -1.5 -1.5 V13 l1.8 -4.5 A2 2 0 0 1 7.1 7 h9.8 a2 2 0 0 1 1.8 1.5 L20.5 13 v2.5 A1.5 1.5 0 0 1 19 17"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg>
+          Mobil
+        </button>
+        <button class="modebtn" data-mode="motor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="17" r="3"/><circle cx="19" cy="17" r="3"/><path d="M5 17 L9 10 h4 l3 4 h4 M9 10 L7 14"/></svg>
+          Motor
+        </button>
+        <button class="modebtn" data-mode="bike">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3.2"/><circle cx="18" cy="17" r="3.2"/><path d="M6 17 L10 9 h4 M10 9 L14 17 M14 17 L18 17 L15 11 L10 9"/></svg>
+          Sepeda
+        </button>
+        <button class="modebtn" data-mode="foot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"/><path d="M9 22 L10.5 15 L8 12 L9.5 8 M15 22 L13.5 14 L16 11 L14.5 8"/></svg>
+          Jalan
+        </button>
+      </div>
+
+      <button class="gobtn" id="btnGo" disabled>
+        <svg class="icon" viewBox="0 0 24 24" style="width:17px;height:17px;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Mulai Rute
+      </button>
+    </div>
+  </div>
+
+  <div id="sideControls">
+    <button class="sidebtn" id="btnLayers" title="Ganti tampilan peta">
+      <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 2 8 12 14 22 8 12 2"/><polyline points="2 14 12 20 22 14"/><polyline points="2 11 12 17 22 11"/></svg>
+    </button>
+    <button class="sidebtn" id="btnNav" title="Mode navigasi (ikuti GPS otomatis)">
+      <svg class="icon" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    </button>
+    <button class="sidebtn" id="btnLocate" title="Lokasi saya">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2 v3 M12 19 v3 M2 12 h3 M19 12 h3"/></svg>
+    </button>
+    <button class="sidebtn" id="btnMenu" title="Tersimpan & Pengaturan">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M4 6 h16 M4 12 h16 M4 18 h16"/></svg>
+    </button>
+    <div class="zoomgroup">
+      <button class="zoombtn" id="btnZoomIn"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M12 5 v14 M5 12 h14"/></svg></button>
+      <button class="zoombtn" id="btnZoomOut"><svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M5 12 h14"/></svg></button>
+    </div>
+  </div>
+
+  <div id="toast">
+    <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M12 9 v4 M12 17 h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    <span id="toastMsg">Pesan</span>
+  </div>
+
+  <div id="bottomSheet">
+    <div class="sheet-handle" id="sheetHandle"></div>
+    <div class="sheet-summary">
+      <div class="sum-left">
+        <div class="sum-time" id="sumTime">--</div>
+        <div class="sum-sub">
+          <svg class="icon" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M4 19 L9 6 L15 19 L20 6"/></svg>
+          <span id="sumDist">--</span>
+          <span id="sumAvgSpeed" class="sum-avgspeed"></span>
+        </div>
+        <div class="sum-arrival" id="sumArrival" style="display:none;"></div>
+      </div>
+      <div class="sum-speed-badge" id="sumSpeedBadge" style="display:none;">
+        <span class="val" id="sumSpeedVal">--</span>
+        <span class="unit">KM/JAM</span>
+      </div>
+      <button class="sheet-close" id="btnVoiceToggle" style="margin-right:6px;" title="Suara navigasi">
+        <svg class="icon" id="voiceIcon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M4 9 v6 h4 l5 4 V5 L8 9 Z"/><path d="M17 8.5 a5 5 0 0 1 0 7"/><path d="M19.5 6 a9 9 0 0 1 0 12"/></svg>
+      </button>
+      <button class="sheet-close" id="btnSheetClose">
+        <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>
+      </button>
+    </div>
+    <svg class="icon sheet-chevron" id="sheetChevron" viewBox="0 0 24 24" style="display:block;margin:0 auto 4px;"><path d="M6 9 L12 15 L18 9"/></svg>
+    <div id="stepsList"></div>
+  </div>
+
+  <div id="menuSheet">
+    <button class="menu-close" id="btnMenuClose">
+      <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>
+    </button>
+    <div class="sheet-handle"></div>
+    <div class="menu-tabs">
+      <button class="menu-tab active" data-tab="places">Tersimpan</button>
+      <button class="menu-tab" data-tab="settings">Pengaturan</button>
+    </div>
+
+    <div class="menu-content" id="tabPlaces">
+      <button class="place-add-btn" id="btnAddCurrentPlace">
+        <svg class="icon" viewBox="0 0 24 24" style="width:17px;height:17px;"><path d="M12 5 v14 M5 12 h14"/></svg>
+        Tandai Lokasi Saat Ini
+      </button>
+      <div class="font-chips" id="placeFilterChips" style="display:none;margin-top:10px;">
+        <div class="font-chip active" data-filter="semua">Semua</div>
+        <div class="font-chip" data-filter="gudang">Gudang Sortir</div>
+        <div class="font-chip" data-filter="transit">Transit</div>
+        <div class="font-chip" data-filter="rumah">Rumah Penerima</div>
+      </div>
+      <div id="placesList"></div>
+    </div>
+
+    <div class="menu-content" id="tabSettings" style="display:none;">
+      <div class="settings-section">
+        <div class="settings-title">Umum</div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Suara Navigasi</span>
+            <span class="toggle-hint">Instruksi arah diucapkan otomatis</span>
+          </div>
+          <div class="toggle-switch" data-setting="voice"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Hindari</div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Hindari Jalan Tol</span></div>
+          <div class="toggle-switch" data-setting="avoidToll"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Hindari Jalan Raya</span></div>
+          <div class="toggle-switch" data-setting="avoidHighway"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Hindari Kemacetan</span>
+            <span class="toggle-hint">Butuh data lalu lintas real-time — belum tersedia di server rute gratis ini</span>
+          </div>
+          <div class="toggle-switch" data-setting="avoidTraffic"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Mesin Rute</div>
+        <div style="color:var(--gray);font-size:12px;line-height:1.5;margin-bottom:8px;">
+          Default: JCMaps memakai <b style="color:var(--cream)">Valhalla</b> (mendukung rute alternatif &amp; profil motor asli), otomatis pindah ke OSRM kalau tidak terjangkau. Opsional: isi API key gratis <b style="color:var(--cream)">GraphHopper</b> di bawah untuk hasil hindari tol/jalan raya yang lebih akurat lagi (dipakai duluan kalau diisi).
+        </div>
+        <input type="text" class="field-input" id="ghKeyInput" placeholder="Tempel API key GraphHopper (opsional)..." style="width:100%;">
+        <a href="https://www.graphhopper.com/dashboard/#/register" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:var(--accent);font-size:12px;font-weight:700;text-decoration:none;">Daftar API key gratis di graphhopper.com →</a>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Offline</div>
+        <div style="color:var(--gray);font-size:12px;line-height:1.6;margin-bottom:10px;">
+          Unduh ubin peta untuk area yang sedang tampil di layar ke penyimpanan lokal HP (IndexedDB), jadi peta area itu tetap bisa dibuka <b style="color:var(--cream)">tanpa internet</b> nanti. Lokasi GPS sendiri diambil langsung dari <b style="color:var(--cream)">chip GPS perangkat</b> (bukan dari internet) — hanya gambar peta &amp; pencarian alamat/rute yang tetap butuh koneksi. Catatan jujur: fix GPS pertama kali bisa lebih lambat tanpa internet karena tidak ada data bantuan A-GPS, tapi tetap berfungsi begitu sinyal satelit didapat.
+        </div>
+        <button class="place-add-btn" id="btnDownloadOffline">
+          <svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px;"><path d="M12 4 v12 M7 11 l5 5 5 -5 M5 20 h14"/></svg>
+          Unduh Peta Area Ini untuk Offline
+        </button>
+        <div class="toggle-hint" id="offlineStorageHint" style="margin-top:8px;">Memuat info penyimpanan...</div>
+        <button class="history-clear" id="btnClearOfflineMaps" style="margin-top:8px;width:100%;justify-content:center;">
+          <svg class="icon" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M4 7 h16 M9 7 V4 h6 v3 M6 7 l1 13 h10 l1 -13"/></svg>
+          Hapus Semua Peta Offline
+        </button>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Pengiriman</div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Mode Pengiriman Kurir</span>
+            <span class="toggle-hint">Tandai lokasi Gudang Sortir / Transit / Rumah Penerima lewat tekan-tahan di peta, lalu filter cepat di tab Tersimpan</span>
+          </div>
+          <div class="toggle-switch" data-setting="courierMode"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Mode Taksi</div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Mode Taksi (Multi-Titik)</span>
+            <span class="toggle-hint">Tambah beberapa titik tujuan sekali jalan (A → B → C → ...)</span>
+          </div>
+          <div class="toggle-switch" data-setting="taxiMode"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Riwayat</div>
+        <div class="toggle-row" id="btnOpenHistory" style="cursor:pointer;">
+          <div class="toggle-text">
+            <span class="toggle-label">Riwayat Perjalanan</span>
+            <span class="toggle-hint" id="historyCountHint">Belum ada perjalanan</span>
+          </div>
+          <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--gray);"><path d="M9 6 L15 12 L9 18"/></svg>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Fitur Lanjutan</div>
+        <div style="color:var(--gray);font-size:12px;margin-bottom:6px;">Tampilan penanda GPS</div>
+        <div class="gps-chips" id="gpsChips">
+          <div class="gps-chip" data-icon="default">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/></svg>
+            <span>Biasa</span>
+          </div>
+          <div class="gps-chip" data-icon="motor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="2.6"/><circle cx="18" cy="17" r="2.6"/><path d="M6 17 L10 9 L14 9 L16 13 L18 17 M10 9 L8 13 L14 13"/></svg>
+            <span>Motor</span>
+          </div>
+          <div class="gps-chip" data-icon="mobil">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17 h14 M5 17 a1.5 1.5 0 0 1 -1.5 -1.5 V13 l1.8 -4.5 A2 2 0 0 1 7.1 7 h9.8 a2 2 0 0 1 1.8 1.5 L20.5 13 v2.5 A1.5 1.5 0 0 1 19 17"/><circle cx="7.5" cy="17" r="1.5"/><circle cx="16.5" cy="17" r="1.5"/></svg>
+            <span>Mobil</span>
+          </div>
+          <div class="gps-chip" data-icon="sepeda">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3.2"/><circle cx="18" cy="17" r="3.2"/><path d="M6 17 L10 9 h4 M10 9 L14 17 M14 17 L18 17 L15 11 L10 9"/></svg>
+            <span>Sepeda</span>
+          </div>
+          <div class="gps-chip" data-icon="orang">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"/><path d="M9 22 L10.5 15 L8 12 L9.5 8 M15 22 L13.5 14 L16 11 L14.5 8"/></svg>
+            <span>Orang</span>
+          </div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Visual Peta</div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Tampilkan Lintang/Bujur</span></div>
+          <div class="toggle-switch" data-setting="showCoords"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text">
+            <span class="toggle-label">Bangunan 3D (jika tersedia)</span>
+            <span class="toggle-hint">Peta ini pakai tile 2D — mode ini menampilkan gaya gedung berbayang sebagai pendekatan, bukan 3D sungguhan</span>
+          </div>
+          <div class="toggle-switch" data-setting="buildings3d"></div>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Jam Tiba di Estimasi Waktu</span></div>
+          <div class="toggle-switch" data-setting="showClock"></div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Visual UI</div>
+        <div class="toggle-row">
+          <div class="toggle-text"><span class="toggle-label">Efek Neon</span></div>
+          <div class="toggle-switch" data-setting="neonEffect"></div>
+        </div>
+        <div style="color:var(--gray);font-size:12px;margin:12px 0 6px;">Font Aplikasi</div>
+        <div class="font-chips" id="fontChips">
+          <div class="font-chip" data-font="default">Default</div>
+          <div class="font-chip" data-font="googlesans">Google Sans*</div>
+          <div class="font-chip" data-font="roboto">Roboto</div>
+          <div class="font-chip" data-font="notosans">Noto Sans</div>
+          <div class="font-chip" data-font="opensans">Open Sans</div>
+          <div class="font-chip" data-font="inter">Inter</div>
+          <div class="font-chip" data-font="lato">Lato</div>
+          <div class="font-chip" data-font="oswald">Oswald</div>
+        </div>
+        <div style="color:var(--gray);font-size:10.5px;margin-top:5px;">*Google Sans tidak tersedia untuk publik, dipakai font pengganti mirip (Plus Jakarta Sans)</div>
+        <div style="color:var(--gray);font-size:12px;margin:16px 0 8px;">Warna UI</div>
+        <div class="color-swatches" id="colorSwatches">
+          <div class="color-swatch active" data-color="tosca" style="background:#2EC4B6;" title="Tosca"></div>
+          <div class="color-swatch" data-color="merah" style="background:#E63946;" title="Merah"></div>
+          <div class="color-swatch" data-color="hijau" style="background:#22C55E;" title="Hijau"></div>
+          <div class="color-swatch" data-color="biru" style="background:#3B82F6;" title="Biru"></div>
+          <div class="color-swatch" data-color="gradient" style="background:linear-gradient(135deg,#8B5CF6,#F472B6);" title="Gradient"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-content" id="tabHistory" style="display:none;">
+      <div class="history-header">
+        <button class="history-back" id="btnHistoryBack">
+          <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M15 6 L9 12 L15 18"/></svg>
+          Kembali
+        </button>
+        <button class="history-clear" id="btnHistoryClear" title="Hapus semua riwayat">
+          <svg class="icon" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M4 7 h16 M9 7 V4 h6 v3 M6 7 l1 13 h10 l1 -13"/></svg>
+          Hapus Semua
+        </button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </div>
+
+  <div id="placeDialog">
+    <div class="dialog-card">
+      <div class="dialog-title">Simpan Lokasi</div>
+      <input type="text" class="field-input" id="placeNameInput" placeholder="Nama tempat (contoh: Rumah, Kantor)" style="width:100%;">
+      <div class="font-chips" id="categoryChips" style="display:none;margin-top:10px;">
+        <div class="font-chip active" data-category="umum">Umum</div>
+        <div class="font-chip" data-category="gudang">Gudang Sortir</div>
+        <div class="font-chip" data-category="transit">Transit</div>
+        <div class="font-chip" data-category="rumah">Rumah Penerima</div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn-cancel" id="btnPlaceCancel">Batal</button>
+        <button class="btn-save" id="btnPlaceSave">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+<script>
+(function(){
+"use strict";
+
+/* ================= ICON SVGS (no emoji) ================= */
+const ICON = {
+  pin: `<svg width="34" height="44" viewBox="0 0 34 44" xmlns="http://www.w3.org/2000/svg"><path d="M17 0C7.6 0 0 7.6 0 17c0 12 17 27 17 27s17-15 17-27C34 7.6 26.4 0 17 0z" fill="#F2A93B"/><circle cx="17" cy="17" r="7" fill="#0E1A24"/></svg>`,
+  origin: `<svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="9" fill="#2EC4B6" stroke="#fff" stroke-width="3"/></svg>`,
+  arrow: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L20 20 L12 15.5 L4 20 Z"/></svg>`,
+  turnLeft: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4 L4 9 L9 14"/><path d="M4 9 H14 A6 6 0 0 1 20 15 V20"/></svg>`,
+  turnRight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4 L20 9 L15 14"/><path d="M20 9 H10 A6 6 0 0 0 4 15 V20"/></svg>`,
+  straight: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20 V4 M6 10 L12 4 L18 10"/></svg>`,
+  flag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V4 M5 4 h13 l-3 4 l3 4 H5"/></svg>`,
+  pinSm: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21 C12 21 19 14.5 19 9.5 A7 7 0 0 0 5 9.5 C5 14.5 12 21 12 21 Z"/><circle cx="12" cy="9.5" r="2.3"/></svg>`,
+  roundabout: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><path d="M12 2 v5 M12 22 v-5 M2 12 h5 M22 12 h-5"/></svg>`,
+  pinStar: `<svg width="28" height="36" viewBox="0 0 28 36" xmlns="http://www.w3.org/2000/svg"><path d="M14 0C6.3 0 0 6.3 0 14c0 10 14 22 14 22s14-12 14-22C28 6.3 21.7 0 14 0z" fill="#2EC4B6"/><path d="M14 7 l2.1 4.3 4.7 0.7 -3.4 3.3 0.8 4.7 -4.2 -2.2 -4.2 2.2 0.8 -4.7 -3.4 -3.3 4.7 -0.7 Z" fill="#0E1A24"/></svg>`,
+  gotoIcon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M5 12 h14 M13 6 l6 6 -6 6"/></svg>`,
+  trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M4 7 h16 M9 7 V4 h6 v3 M6 7 l1 13 h10 l1 -13"/></svg>`,
+  speakerOn: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M4 9 v6 h4 l5 4 V5 L8 9 Z"/><path d="M17 8.5 a5 5 0 0 1 0 7"/><path d="M19.5 6 a9 9 0 0 1 0 12"/></svg>`,
+  speakerOff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;"><path d="M4 9 v6 h4 l5 4 V5 L8 9 Z"/><path d="M17 9 L22 14 M22 9 L17 14"/></svg>`,
+  vehicle: {
+    motor: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gMotor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><rect x="9" y="13" width="12" height="3" rx="1.5" fill="#0E1A24" opacity="0.4"/><rect x="13" y="8" width="4" height="14" rx="2" fill="url(#gMotor)"/><ellipse cx="15" cy="6" rx="3" ry="4" fill="url(#gMotor)"/><ellipse cx="15" cy="24" rx="3.4" ry="4.4" fill="url(#gMotor)"/></svg>`,
+    mobil: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gMobil" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><rect x="7" y="4" width="16" height="22" rx="6" fill="url(#gMobil)"/><rect x="9.5" y="8" width="11" height="6" rx="2" fill="#0E1A24" opacity="0.35"/><rect x="9.5" y="17" width="11" height="5" rx="2" fill="#0E1A24" opacity="0.2"/></svg>`,
+    sepeda: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gSepeda" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><circle cx="15" cy="6" r="3.6" fill="none" stroke="url(#gSepeda)" stroke-width="2.4"/><circle cx="15" cy="24" r="3.6" fill="none" stroke="url(#gSepeda)" stroke-width="2.4"/><line x1="15" y1="9.6" x2="15" y2="20.4" stroke="url(#gSepeda)" stroke-width="2.4" stroke-linecap="round"/><line x1="10.5" y1="6" x2="19.5" y2="6" stroke="url(#gSepeda)" stroke-width="2" stroke-linecap="round"/></svg>`,
+    orang: `<svg viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="gOrang" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CEFE2"/><stop offset="1" stop-color="#1A8F83"/></linearGradient></defs><circle cx="15" cy="9" r="4.4" fill="url(#gOrang)"/><path d="M15 13 L22 25 L15 21 L8 25 Z" fill="url(#gOrang)"/></svg>`
+  }
+};
+
+const TILE_LAYERS = {
+  standard: {
+    label: "Standar",
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attr: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  },
+  malam: {
+    label: "Malam",
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attr: '&copy; OpenStreetMap contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  },
+  voyager: {
+    label: "Voyager",
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+    attr: '&copy; OpenStreetMap contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }
+};
+
+// Valhalla = mesin rute utama (mendukung rute alternatif & profil motor asli).
+// OSRM tetap disiapkan sebagai cadangan otomatis kalau Valhalla tidak terjangkau.
+const VALHALLA_URL = "https://valhalla1.openstreetmap.de/route";
+const VALHALLA_COSTING = { car: "auto", motor: "motorcycle", bike: "bicycle", foot: "pedestrian" };
+
+// Setiap moda punya server utama + server cadangan (fallback) berbeda,
+// supaya kalau satu server publik sedang sibuk/off, rute tetap bisa dihitung.
+const OSRM_PROFILE = {
+  car:  [
+    { serviceUrl: "https://router.project-osrm.org/route/v1", profile: "driving" },
+    { serviceUrl: "https://routing.openstreetmap.de/routed-car/route/v1", profile: "driving" }
+  ],
+  bike: [
+    { serviceUrl: "https://routing.openstreetmap.de/routed-bike/route/v1", profile: "bike" },
+    { serviceUrl: "https://routing.openstreetmap.de/routed-bike/route/v1", profile: "driving" }
+  ],
+  foot: [
+    { serviceUrl: "https://routing.openstreetmap.de/routed-foot/route/v1", profile: "foot" },
+    { serviceUrl: "https://routing.openstreetmap.de/routed-foot/route/v1", profile: "driving" }
+  ]
+};
+OSRM_PROFILE.motor = OSRM_PROFILE.car; // OSRM publik tidak punya profil motor, dipakai hanya saat cadangan
+
+/* ================= STATE ================= */
+let map, tileLayer, currentTileKey = "standard";
+let gpsMarker = null, gpsCircle = null, watchId = null, followMode = true;
+let navMode = false, lastFix = null, lastHeading = 0;
+let originMarker = null, destMarker = null;
+let routingControl = null;
+let originLatLng = null, destLatLng = null;
+let currentMode = "car";
+let searchTimer = null;
+let activeSearchTarget = "quick"; // 'quick' | 'origin' | 'dest'
+let currentRouteCoords = [], currentManeuvers = [], voiceStepIndex = 0;
+let lastRouteData = null, lastRouteSource = null, activeTripIndex = 0, routeLayers = [];
+let activeCasing = null, activeTraveled = null, activeRemaining = null, activeFullCoords = [], lastNearestIdx = 0;
+let lastRerouteTime = 0, lastSpeedFix = null;
+let savedPlaceMarkers = [], pendingPlaceLatLng = null, tempPlaceMarker = null, pendingCategory = 'umum', activePlaceFilter = 'semua';
+let taxiStops = [], stopMarkers = [], stopSeq = 0;
+let pressTimer = null, pressLatLng = null;
+
+/* ================= SETELAN & PENANDA TEMPAT (localStorage) ================= */
+const SETTINGS_KEY = 'jcmaps_settings';
+const PLACES_KEY = 'jcmaps_places';
+let SETTINGS = { voice:true, avoidToll:false, avoidHighway:false, avoidTraffic:false, gpsIconType:'default', graphhopperKey:'',
+  showCoords:false, buildings3d:false, showClock:false, neonEffect:false, fontChoice:'default', colorTheme:'tosca',
+  courierMode:false, taxiMode:false };
+let PLACES = [];
+
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if(raw) SETTINGS = Object.assign(SETTINGS, JSON.parse(raw));
+  }catch(e){ /* localStorage tidak tersedia, pakai default */ }
+}
+function saveSettings(){
+  try{ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }catch(e){}
+}
+function loadPlaces(){
+  try{
+    const raw = localStorage.getItem(PLACES_KEY);
+    PLACES = raw ? JSON.parse(raw) : [];
+  }catch(e){ PLACES = []; }
+}
+function savePlaces(){
+  try{ localStorage.setItem(PLACES_KEY, JSON.stringify(PLACES)); }catch(e){}
+}
+
+/* ---- Riwayat Perjalanan ---- */
+const HISTORY_KEY = 'jcmaps_history';
+const HISTORY_LIMIT = 60;
+const MODE_LABEL = { car:'Mobil', motor:'Motor', bike:'Sepeda', foot:'Jalan Kaki' };
+const BULAN_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+let HISTORY = [];
+
+function loadHistory(){
+  try{
+    const raw = localStorage.getItem(HISTORY_KEY);
+    HISTORY = raw ? JSON.parse(raw) : [];
+  }catch(e){ HISTORY = []; }
+}
+function saveHistory(){
+  try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(HISTORY)); }catch(e){}
+}
+function addHistoryEntry(originName, destName, mode, distanceM, durationSec){
+  HISTORY.unshift({
+    id: 'h' + Date.now(),
+    originName: originName || 'Lokasi Anda',
+    destName: destName || 'Tujuan',
+    mode, distanceM, durationSec,
+    timestamp: new Date().toISOString()
+  });
+  if(HISTORY.length > HISTORY_LIMIT) HISTORY = HISTORY.slice(0, HISTORY_LIMIT);
+  saveHistory();
+  updateHistoryHint();
+}
+function formatHistoryTimestamp(iso){
+  const d = new Date(iso);
+  const jam = String(d.getHours()).padStart(2,'0');
+  const mnt = String(d.getMinutes()).padStart(2,'0');
+  const dtk = String(d.getSeconds()).padStart(2,'0');
+  return `${d.getDate()} ${BULAN_ID[d.getMonth()]} ${d.getFullYear()}, ${jam}:${mnt}:${dtk}`;
+}
+function updateHistoryHint(){
+  const hint = document.getElementById('historyCountHint');
+  if(hint) hint.textContent = HISTORY.length ? `${HISTORY.length} perjalanan tercatat` : 'Belum ada perjalanan';
+}
+function renderHistoryList(){
+  const wrap = document.getElementById('historyList');
+  wrap.innerHTML = '';
+  if(!HISTORY.length){
+    wrap.innerHTML = '<div class="empty-hint">Belum ada riwayat perjalanan. Riwayat otomatis tersimpan tiap kali kamu menghitung rute.</div>';
+    return;
+  }
+  HISTORY.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.innerHTML = `<div class="history-icon">${ICON.flag}</div>
+      <div class="history-body">
+        <div class="history-route">${h.originName} &rarr; ${h.destName}</div>
+        <div class="history-meta">
+          <span>${MODE_LABEL[h.mode] || h.mode}</span><span class="dot-sep"></span>
+          <span>${formatDistance(h.distanceM)}</span><span class="dot-sep"></span>
+          <span>${formatDuration(h.durationSec)}</span>
+        </div>
+      </div>
+      <div class="history-time">${formatHistoryTimestamp(h.timestamp)}</div>`;
+    wrap.appendChild(div);
+  });
+}
+function applySettingsToUI(){
+  document.querySelectorAll('.toggle-switch[data-setting]').forEach(el => {
+    el.classList.toggle('on', !!SETTINGS[el.dataset.setting]);
+  });
+  document.querySelectorAll('.gps-chip[data-icon]').forEach(el => {
+    el.classList.toggle('active', el.dataset.icon === SETTINGS.gpsIconType);
+  });
+  document.querySelectorAll('.font-chip[data-font]').forEach(el => {
+    el.classList.toggle('active', el.dataset.font === SETTINGS.fontChoice);
+  });
+  document.querySelectorAll('.color-swatch[data-color]').forEach(el => {
+    el.classList.toggle('active', el.dataset.color === SETTINGS.colorTheme);
+  });
+  const vIcon = document.getElementById('voiceIcon');
+  if(vIcon) vIcon.innerHTML = SETTINGS.voice ? ICON.speakerOn.replace(/<\/?svg[^>]*>/g,'') : ICON.speakerOff.replace(/<\/?svg[^>]*>/g,'');
+  const ghInput = document.getElementById('ghKeyInput');
+  if(ghInput && document.activeElement !== ghInput) ghInput.value = SETTINGS.graphhopperKey || '';
+
+  document.body.classList.toggle('neon-mode', !!SETTINGS.neonEffect);
+  applyFontChoice(SETTINGS.fontChoice);
+  applyColorTheme(SETTINGS.colorTheme);
+  document.getElementById('coordsOverlay').style.display = SETTINGS.showCoords ? 'block' : 'none';
+  document.getElementById('taxiStopsSection').style.display = SETTINGS.taxiMode ? 'block' : 'none';
+  document.getElementById('placeFilterChips').style.display = SETTINGS.courierMode ? 'flex' : 'none';
+}
+
+/* ---- Font aplikasi ---- */
+const FONT_MAP = {
+  default: "'Inter', 'Space Grotesk', sans-serif",
+  googlesans: "'Plus Jakarta Sans', sans-serif",
+  roboto: "'Roboto', sans-serif",
+  notosans: "'Noto Sans', sans-serif",
+  opensans: "'Open Sans', sans-serif",
+  inter: "'Inter', sans-serif",
+  lato: "'Lato', sans-serif",
+  oswald: "'Oswald', sans-serif"
+};
+function applyFontChoice(key){
+  document.documentElement.style.setProperty('--user-font', FONT_MAP[key] || FONT_MAP.default);
+  document.body.classList.toggle('custom-font', key && key !== 'default');
+}
+
+/* ---- Warna UI ---- */
+const COLOR_THEMES = {
+  tosca:    { accent:'#2EC4B6', bright:'#3FE0D0' },
+  merah:    { accent:'#E63946', bright:'#FF6B6B' },
+  hijau:    { accent:'#22C55E', bright:'#4ADE80' },
+  biru:     { accent:'#3B82F6', bright:'#60A5FA' },
+  gradient: { accent:'#8B5CF6', bright:'#F472B6' }
+};
+function applyColorTheme(key){
+  const t = COLOR_THEMES[key] || COLOR_THEMES.tosca;
+  document.documentElement.style.setProperty('--accent', t.accent);
+  document.documentElement.style.setProperty('--accent-bright', t.bright);
+  if(routeLayers.length) renderRoutes(); // warnai ulang garis rute aktif kalau sedang tampil
+}
+function currentAccentColor(){
+  return getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#2EC4B6';
+}
+
+/* ================= PETA OFFLINE (IndexedDB, bukan localStorage — ubin peta terlalu besar untuk localStorage) ================= */
+const TILE_DB_NAME = 'jcmaps-tiles';
+const TILE_STORE = 'tiles';
+let tileDB = null;
+
+function openTileDB(){
+  return new Promise((resolve, reject) => {
+    if(!('indexedDB' in window)){ reject(new Error('IndexedDB tidak didukung browser ini')); return; }
+    const req = indexedDB.open(TILE_DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if(!db.objectStoreNames.contains(TILE_STORE)) db.createObjectStore(TILE_STORE);
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+async function getTileDB(){
+  if(!tileDB) tileDB = await openTileDB();
+  return tileDB;
+}
+function tileKey(z,x,y){ return `${z}/${x}/${y}`; }
+async function saveTileBlob(z,x,y,blob){
+  const db = await getTileDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(TILE_STORE, 'readwrite');
+    tx.objectStore(TILE_STORE).put(blob, tileKey(z,x,y));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function getTileBlob(z,x,y){
+  const db = await getTileDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(TILE_STORE, 'readonly');
+    const req = tx.objectStore(TILE_STORE).get(tileKey(z,x,y));
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function countTilesOffline(){
+  try{
+    const db = await getTileDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(TILE_STORE, 'readonly');
+      const req = tx.objectStore(TILE_STORE).count();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => resolve(0);
+    });
+  }catch(e){ return 0; }
+}
+async function clearTileDB(){
+  const db = await getTileDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(TILE_STORE, 'readwrite');
+    tx.objectStore(TILE_STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function updateOfflineHint(){
+  const el = document.getElementById('offlineStorageHint');
+  if(!el) return;
+  const n = await countTilesOffline();
+  el.textContent = n > 0 ? `${n} ubin peta tersimpan offline (± ${(n*18/1024).toFixed(1)} MB)` : 'Belum ada peta yang diunduh untuk offline';
+}
+
+// Tile layer kustom: cek IndexedDB dulu (bisa dibaca tanpa internet), baru fallback ke jaringan
+// kalau tidak ada di cache — dan ubin yang diambil dari jaringan otomatis disimpan juga untuk lain kali.
+const OfflineTileLayer = L.TileLayer.extend({
+  createTile: function(coords, done){
+    const img = document.createElement('img');
+    img.setAttribute('role', 'presentation');
+    const z = coords.z, x = coords.x, y = coords.y;
+    const url = this.getTileUrl(coords);
+
+    getTileBlob(z, x, y).then(blob => {
+      if(blob){
+        img.src = URL.createObjectURL(blob);
+        img.onload = () => done(null, img);
+        img.onerror = () => done(new Error('gagal baca ubin offline'), img);
+        return;
+      }
+      fetch(url).then(res => {
+        if(!res.ok) throw new Error('tile fetch gagal');
+        return res.blob();
+      }).then(fetchedBlob => {
+        img.src = URL.createObjectURL(fetchedBlob);
+        img.onload = () => done(null, img);
+        img.onerror = () => done(new Error('gagal muat ubin'), img);
+        saveTileBlob(z, x, y, fetchedBlob).catch(() => {}); // simpan pasif buat offline nanti
+      }).catch(() => {
+        // Tidak ada cache & tidak ada internet -> ubin ini memang tidak bisa ditampilkan
+        img.src = url;
+        done(null, img);
+      });
+    }).catch(() => {
+      img.src = url;
+      done(null, img);
+    });
+
+    return img;
+  }
+});
+
+/* ---- Unduh ubin peta untuk area yang sedang tampil ---- */
+async function downloadCurrentAreaOffline(){
+  if(!('indexedDB' in window)){
+    showToast('Browser ini tidak mendukung penyimpanan offline (IndexedDB).', false);
+    return;
+  }
+  const bounds = map.getBounds();
+  const minZoom = Math.max(10, map.getZoom() - 2);
+  const maxZoom = Math.min(17, map.getZoom() + 2);
+  const tiles = [];
+  for(let z = minZoom; z <= maxZoom; z++){
+    const nw = map.project(bounds.getNorthWest(), z).divideBy(256).floor();
+    const se = map.project(bounds.getSouthEast(), z).divideBy(256).floor();
+    for(let x = nw.x; x <= se.x; x++){
+      for(let y = nw.y; y <= se.y; y++){
+        tiles.push({ z, x, y });
+      }
+    }
+  }
+  if(tiles.length > 2500){
+    showToast(`Area/zoom terlalu luas (${tiles.length} ubin). Perkecil area peta dulu (zoom in) lalu coba lagi.`, false);
+    return;
+  }
+
+  let done = 0, saved = 0, failed = 0;
+  showToast(`Mengunduh peta offline: 0/${tiles.length}`, true);
+  for(const t of tiles){
+    try{
+      const existing = await getTileBlob(t.z, t.x, t.y);
+      if(!existing){
+        const url = tileLayer.getTileUrl({ x:t.x, y:t.y, z:t.z });
+        const res = await fetch(url);
+        if(res.ok){
+          const blob = await res.blob();
+          await saveTileBlob(t.z, t.x, t.y, blob);
+          saved++;
+        } else { failed++; }
+      } else { saved++; }
+    }catch(e){ failed++; }
+    done++;
+    if(done % 12 === 0 || done === tiles.length){
+      showToast(`Mengunduh peta offline: ${done}/${tiles.length}`, true);
+    }
+  }
+  hideToast();
+  updateOfflineHint();
+  showToast(`Selesai — ${saved} ubin tersimpan untuk offline${failed ? `, ${failed} gagal (cek koneksi)` : ''}.`, false);
+}
+
+/* ================= MAP INIT ================= */
+function initMap(){
+  map = L.map('map', { zoomControl:false, attributionControl:true }).setView([-6.2088, 106.8456], 13);
+  tileLayer = new OfflineTileLayer(TILE_LAYERS.standard.url, {
+    subdomains: 'abc', maxZoom: 19, attribution: TILE_LAYERS.standard.attr
+  }).addTo(map);
+}
+
+function setTileLayer(key){
+  currentTileKey = key;
+  const cfg = TILE_LAYERS[key];
+  map.removeLayer(tileLayer);
+  tileLayer = new OfflineTileLayer(cfg.url, { subdomains:'abc', maxZoom:19, attribution: cfg.attr }).addTo(map);
+  showToast(`Tampilan peta: ${cfg.label}`, false);
+}
+
+/* ================= TOAST ================= */
+let toastTimer = null;
+function showToast(msg, persistent, actionLabel, actionFn){
+  const t = document.getElementById('toast');
+  const m = document.getElementById('toastMsg');
+  const old = t.querySelector('.toastbtn');
+  if(old) old.remove();
+  m.textContent = msg;
+  if(actionLabel){
+    const b = document.createElement('button');
+    b.className = 'toastbtn';
+    b.textContent = actionLabel;
+    b.onclick = actionFn;
+    t.appendChild(b);
+  }
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  if(!persistent){
+    toastTimer = setTimeout(()=> t.classList.remove('show'), 3200);
+  }
+}
+function hideToast(){ document.getElementById('toast').classList.remove('show'); }
+
+/* ================= SUARA NAVIGASI (Web Speech API) ================= */
+function speak(text){
+  if(!SETTINGS.voice) return;
+  if(!('speechSynthesis' in window)) return;
+  try{
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'id-ID';
+    u.rate = 1;
+    u.pitch = 1;
+    window.speechSynthesis.speak(u);
+  }catch(e){ /* abaikan jika speech synthesis tidak didukung */ }
+}
+
+function distMeters(lat1, lon1, lat2, lon2){
+  const R = 6371000, toRad = d => d*Math.PI/180;
+  const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(a));
+}
+function computeBearing(lat1, lon1, lat2, lon2){
+  const toRad = d => d*Math.PI/180, toDeg = r => r*180/Math.PI;
+  const y = Math.sin(toRad(lon2-lon1)) * Math.cos(toRad(lat2));
+  const x = Math.cos(toRad(lat1))*Math.sin(toRad(lat2)) - Math.sin(toRad(lat1))*Math.cos(toRad(lat2))*Math.cos(toRad(lon2-lon1));
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+/* ---- Decoder shape Valhalla (encoded polyline presisi 6 digit) ---- */
+function decodePolyline6(encoded){
+  let index = 0, lat = 0, lng = 0;
+  const coords = [];
+  while(index < encoded.length){
+    let result = 1, shift = 0, b;
+    do{ b = encoded.charCodeAt(index++) - 63 - 1; result += b << shift; shift += 5; } while(b >= 0x1f);
+    lat += (result & 1) ? ~(result >> 1) : (result >> 1);
+    result = 1; shift = 0;
+    do{ b = encoded.charCodeAt(index++) - 63 - 1; result += b << shift; shift += 5; } while(b >= 0x1f);
+    lng += (result & 1) ? ~(result >> 1) : (result >> 1);
+    coords.push([lat / 1e6, lng / 1e6]);
+  }
+  return coords;
+}
+
+/* ---- Pemetaan tipe maneuver Valhalla -> ikon kita ---- */
+function valhallaManeuverIcon(type){
+  if([1,2,3].includes(type)) return ICON.pinSm;
+  if([4,5,6].includes(type)) return ICON.flag;
+  if([26,27].includes(type)) return ICON.roundabout;
+  if([9,10,11,18,20,23,13].includes(type)) return ICON.turnRight;
+  if([14,15,16,19,21,24,12].includes(type)) return ICON.turnLeft;
+  return ICON.straight;
+}
+
+const mapEl = document.getElementById('map');
+
+function setMapRotation(headingDeg){
+  if(!navMode) return;
+  mapEl.style.transform = `rotate(${-headingDeg}deg)`;
+}
+
+function enterNavMode(){
+  navMode = true;
+  followMode = true;
+  document.getElementById('btnNav').classList.add('active');
+  document.getElementById('btnLocate').classList.add('active');
+  mapEl.classList.add('nav-rotate');
+  requestAnimationFrame(() => map.invalidateSize({ pan:false }));
+  if(gpsMarker){
+    map.setView(gpsMarker.getLatLng(), 18, { animate:true });
+    setMapRotation(lastHeading);
+  } else {
+    requestGeolocation();
+  }
+  showToast('Mode navigasi aktif — peta mengikuti posisi Anda otomatis', false);
+}
+
+function exitNavMode(){
+  if(!navMode) return;
+  navMode = false;
+  document.getElementById('btnNav').classList.remove('active');
+  mapEl.style.transform = 'rotate(0deg)';
+  setTimeout(() => {
+    mapEl.classList.remove('nav-rotate');
+    map.invalidateSize({ pan:false });
+  }, 480);
+}
+
+/* ================= GEOLOCATION (GPS REAL-TIME) ================= */
+function requestGeolocation(){
+  if(!('geolocation' in navigator)){
+    showToast('Perangkat tidak mendukung Geolocation API', false);
+    return;
+  }
+  showToast('Meminta izin lokasi...', true);
+  navigator.geolocation.getCurrentPosition(
+    pos => { hideToast(); onLocationUpdate(pos); startWatch(); centerOnUser(true); },
+    err => handleGeoError(err),
+    { enableHighAccuracy:true, timeout:10000, maximumAge:0 }
+  );
+}
+
+function startWatch(){
+  if(watchId !== null) return;
+  watchId = navigator.geolocation.watchPosition(
+    onLocationUpdate,
+    err => handleGeoError(err),
+    { enableHighAccuracy:true, maximumAge:1000, timeout:15000 }
+  );
+}
+
+function handleGeoError(err){
+  hideToast();
+  let msg = 'Tidak dapat mengambil lokasi.';
+  if(err.code === 1) msg = 'Izin lokasi ditolak.';
+  else if(err.code === 2) msg = 'Posisi tidak tersedia.';
+  else if(err.code === 3) msg = 'Waktu permintaan lokasi habis.';
+  showToast(msg, true, 'Coba lagi', () => { hideToast(); requestGeolocation(); });
+}
+
+function buildGpsIcon(heading){
+  const hasHeading = (typeof heading === 'number' && !isNaN(heading));
+  const rot = hasHeading ? heading : 0;
+  const type = SETTINGS.gpsIconType || 'default';
+  let inner;
+  if(type === 'default'){
+    inner = hasHeading
+      ? `<div class="gps-arrow" style="transform:translate(-50%,-50%) rotate(${rot}deg)">${ICON.arrow}</div>`
+      : `<div class="gps-dot"></div>`;
+  } else {
+    inner = `<div class="gps-arrow" style="transform:translate(-50%,-50%) rotate(${rot}deg)">${ICON.vehicle[type]}</div>`;
+  }
+  return L.divIcon({
+    className: '',
+    html: `<div class="gps-puck"><div class="gps-pulse"></div>${inner}</div>`,
+    iconSize:[26,26], iconAnchor:[13,13]
+  });
+}
+
+function onLocationUpdate(pos){
+  const { latitude, longitude, accuracy } = pos.coords;
+  let heading = pos.coords.heading;
+  const latlng = [latitude, longitude];
+
+  if(typeof heading === 'number' && !isNaN(heading)){
+    lastHeading = heading;
+  } else if(lastFix){
+    const moved = distMeters(lastFix.lat, lastFix.lng, latitude, longitude);
+    if(moved > 3){
+      lastHeading = computeBearing(lastFix.lat, lastFix.lng, latitude, longitude);
+    }
+    heading = lastHeading;
+  } else {
+    heading = null;
+  }
+  lastFix = { lat: latitude, lng: longitude };
+
+  if(!gpsMarker){
+    gpsMarker = L.marker(latlng, { icon: buildGpsIcon(heading), zIndexOffset: 1000 }).addTo(map);
+  } else {
+    gpsMarker.setLatLng(latlng);
+    gpsMarker.setIcon(buildGpsIcon(heading));
+  }
+
+  if(!gpsCircle){
+    gpsCircle = L.circle(latlng, { radius: accuracy, color: currentAccentColor(), weight:1, fillColor: currentAccentColor(), fillOpacity:0.12 }).addTo(map);
+  } else {
+    gpsCircle.setLatLng(latlng);
+    gpsCircle.setRadius(accuracy);
+  }
+
+  if(followMode){
+    map.panTo(latlng, { animate:true, duration:0.6 });
+  }
+  if(navMode){
+    setMapRotation(lastHeading);
+  }
+
+  // Panduan suara: umumkan instruksi berikutnya berdasarkan jarak ke titik belokan
+  if(currentManeuvers.length && SETTINGS.voice && voiceStepIndex < currentManeuvers.length){
+    const m = currentManeuvers[voiceStepIndex];
+    const idx = Math.min(m.coordIndex || 0, currentRouteCoords.length - 1);
+    const pt = currentRouteCoords[idx];
+    const d = pt ? distMeters(latitude, longitude, pt[0], pt[1]) : Infinity;
+    if(d < 400 && m._voiceState === 0){
+      m._voiceState = 1;
+      speak(`Dalam ${Math.round(d/50)*50} meter, ${translateInstruction(m.text)}`);
+    } else if(d < 40 && m._voiceState <= 1){
+      m._voiceState = 2;
+      speak(translateInstruction(m.text));
+      voiceStepIndex++;
+    }
+  }
+
+  // Bagian rute yang sudah dilewati jadi abu-abu (mirip Google Maps) + deteksi keluar rute
+  if(activeFullCoords.length){
+    updateTraveledProgress(latitude, longitude);
+    checkOffRoute(latitude, longitude);
+  }
+
+  // Kecepatan real-time (dari GPS, fallback dihitung dari perpindahan posisi kalau device tidak kirim speed)
+  let speedMs = pos.coords.speed;
+  if(typeof speedMs !== 'number' || isNaN(speedMs) || speedMs < 0){
+    if(lastSpeedFix){
+      const dt = (pos.timestamp - lastSpeedFix.t) / 1000;
+      if(dt > 0.5){
+        speedMs = distMeters(lastSpeedFix.lat, lastSpeedFix.lng, latitude, longitude) / dt;
+      }
+    }
+  }
+  lastSpeedFix = { lat: latitude, lng: longitude, t: pos.timestamp };
+  const speedBadge = document.getElementById('sumSpeedBadge');
+  if(currentManeuvers.length && typeof speedMs === 'number' && !isNaN(speedMs)){
+    speedBadge.style.display = 'flex';
+    document.getElementById('sumSpeedVal').textContent = Math.round(Math.max(0, speedMs) * 3.6);
+  } else if(!currentManeuvers.length){
+    speedBadge.style.display = 'none';
+  }
+
+  if(SETTINGS.showCoords){
+    document.getElementById('coordsOverlay').textContent = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+  }
+
+  document.getElementById('inputOrigin').dataset.lat = latitude;
+  document.getElementById('inputOrigin').dataset.lng = longitude;
+  if(document.getElementById('inputOrigin').value === '' || document.getElementById('inputOrigin').dataset.auto === '1'){
+    document.getElementById('inputOrigin').value = 'Lokasi Anda';
+    document.getElementById('inputOrigin').dataset.auto = '1';
+  }
+}
+
+function centerOnUser(zoomIn){
+  if(gpsMarker){
+    map.setView(gpsMarker.getLatLng(), zoomIn ? 16 : map.getZoom(), { animate:true });
+  }
+}
+
+/* ================= SEARCH (NOMINATIM / OSM) ================= */
+async function nominatimSearch(query){
+  const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&q=${encodeURIComponent(query)}`;
+  const res = await fetch(url, { headers: { 'Accept-Language': 'id' } });
+  if(!res.ok) throw new Error('Gagal mencari');
+  return res.json();
+}
+
+function renderResults(list, targetInputId){
+  const wrap = document.getElementById('searchResults');
+  wrap.innerHTML = '';
+  if(!list.length){
+    wrap.classList.remove('open');
+    return;
+  }
+  list.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'result-item';
+    const mainName = item.display_name.split(',')[0];
+    const rest = item.display_name.split(',').slice(1,3).join(',').trim();
+    div.innerHTML = `${ICON.pinSm}<div><div class="rname">${mainName}</div><div class="raddr">${rest}</div></div>`;
+    div.addEventListener('click', () => selectResult(item, targetInputId));
+    wrap.appendChild(div);
+  });
+  wrap.classList.add('open');
+}
+
+function selectResult(item, targetInputId){
+  const latlng = [parseFloat(item.lat), parseFloat(item.lon)];
+  document.getElementById('searchResults').classList.remove('open');
+
+  if(targetInputId === 'quick'){
+    document.getElementById('searchInput').value = item.display_name.split(',')[0];
+    if(destMarker) map.removeLayer(destMarker);
+    destMarker = L.marker(latlng, { icon: L.divIcon({ className:'pin-dest', html: ICON.pin, iconSize:[34,44], iconAnchor:[17,44] }) }).addTo(map);
+    map.flyTo(latlng, 15, { duration: 0.9 });
+    destLatLng = latlng;
+    document.getElementById('inputDest').value = item.display_name.split(',')[0];
+    document.getElementById('btnGo').disabled = !(originLatLng || document.getElementById('inputOrigin').dataset.lat);
+  } else if(targetInputId === 'inputOrigin'){
+    document.getElementById('inputOrigin').value = item.display_name.split(',')[0];
+    document.getElementById('inputOrigin').dataset.auto = '0';
+    originLatLng = latlng;
+    if(originMarker) map.removeLayer(originMarker);
+    originMarker = L.marker(latlng, { icon: L.divIcon({ className:'pin-origin', html: ICON.origin, iconSize:[22,22], iconAnchor:[11,11] }) }).addTo(map);
+    checkGoEnabled();
+  } else if(targetInputId === 'inputDest'){
+    document.getElementById('inputDest').value = item.display_name.split(',')[0];
+    destLatLng = latlng;
+    if(destMarker) map.removeLayer(destMarker);
+    destMarker = L.marker(latlng, { icon: L.divIcon({ className:'pin-dest', html: ICON.pin, iconSize:[34,44], iconAnchor:[17,44] }) }).addTo(map);
+    map.flyTo(latlng, 14, { duration: 0.9 });
+    checkGoEnabled();
+  } else if(targetInputId.indexOf('stop:') === 0){
+    const stopId = targetInputId.slice(5);
+    const stop = taxiStops.find(s => s.id === stopId);
+    if(stop){
+      stop.lat = latlng[0]; stop.lng = latlng[1]; stop.name = item.display_name.split(',')[0];
+      const inputEl = document.getElementById('stop-input-' + stopId);
+      if(inputEl) inputEl.value = stop.name;
+      refreshStopMarkers();
+    }
+  }
+}
+
+/* ================= PENANDA TEMPAT (Saved Places) ================= */
+function refreshSavedPlaceMarkers(){
+  savedPlaceMarkers.forEach(m => map.removeLayer(m));
+  savedPlaceMarkers = PLACES.map(p => {
+    const m = L.marker([p.lat, p.lng], { icon: L.divIcon({ className:'pin-saved', html: ICON.pinStar, iconSize:[28,36], iconAnchor:[14,36] }) }).addTo(map);
+    m.on('click', () => usePlaceAsDestination(p));
+    return m;
+  });
+}
+
+const CATEGORY_LABEL = { umum:'Umum', gudang:'Gudang Sortir', transit:'Transit', rumah:'Rumah Penerima' };
+
+function renderPlacesList(){
+  const wrap = document.getElementById('placesList');
+  wrap.innerHTML = '';
+  const filtered = (SETTINGS.courierMode && activePlaceFilter !== 'semua')
+    ? PLACES.filter(p => (p.category || 'umum') === activePlaceFilter)
+    : PLACES;
+  if(!filtered.length){
+    wrap.innerHTML = '<div class="empty-hint">Belum ada lokasi tersimpan. Tap tombol di atas, atau tekan &amp; tahan di peta untuk menandai tempat.</div>';
+    return;
+  }
+  filtered.forEach(p => {
+    const cat = p.category || 'umum';
+    const div = document.createElement('div');
+    div.className = 'place-item';
+    div.innerHTML = `<div class="place-icon">${ICON.pinSm}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="place-name">${p.name}</div>
+        ${cat !== 'umum' ? `<span class="place-category-badge cat-${cat}">${CATEGORY_LABEL[cat]}</span>` : ''}
+      </div>
+      <div class="place-actions">
+        <button class="btn-goto" title="Jadikan tujuan">${ICON.gotoIcon}</button>
+        <button class="btn-del danger" title="Hapus">${ICON.trash}</button>
+      </div>`;
+    div.querySelector('.btn-goto').addEventListener('click', () => usePlaceAsDestination(p));
+    div.querySelector('.btn-del').addEventListener('click', () => deletePlace(p.id));
+    wrap.appendChild(div);
+  });
+}
+
+function usePlaceAsDestination(p){
+  destLatLng = [p.lat, p.lng];
+  if(destMarker) map.removeLayer(destMarker);
+  destMarker = L.marker(destLatLng, { icon: L.divIcon({ className:'pin-dest', html: ICON.pin, iconSize:[34,44], iconAnchor:[17,44] }) }).addTo(map);
+  document.getElementById('inputDest').value = p.name;
+  document.getElementById('menuSheet').classList.remove('show');
+  document.getElementById('directionsPanel').classList.add('show');
+  map.flyTo(destLatLng, 15, { duration:0.9 });
+  checkGoEnabled();
+}
+
+function deletePlace(id){
+  PLACES = PLACES.filter(p => p.id !== id);
+  savePlaces();
+  renderPlacesList();
+  refreshSavedPlaceMarkers();
+}
+
+function openPlaceDialog(lat, lng){
+  pendingPlaceLatLng = { lat, lng };
+  pendingCategory = 'umum';
+  document.getElementById('placeNameInput').value = '';
+  document.getElementById('categoryChips').style.display = SETTINGS.courierMode ? 'flex' : 'none';
+  document.querySelectorAll('#categoryChips .font-chip').forEach(c => c.classList.toggle('active', c.dataset.category === 'umum'));
+  document.getElementById('placeDialog').classList.add('show');
+  setTimeout(() => document.getElementById('placeNameInput').focus(), 60);
+}
+function closePlaceDialog(){
+  document.getElementById('placeDialog').classList.remove('show');
+  if(tempPlaceMarker){ map.removeLayer(tempPlaceMarker); tempPlaceMarker = null; }
+  pendingPlaceLatLng = null;
+}
+
+function checkGoEnabled(){
+  const hasOrigin = originLatLng || document.getElementById('inputOrigin').dataset.lat;
+  const stopsReady = taxiStops.every(s => s.lat != null);
+  document.getElementById('btnGo').disabled = !(hasOrigin && destLatLng && stopsReady);
+}
+
+/* ================= MODE TAKSI (multi-titik A-B-C-...) ================= */
+function buildWaypointList(){
+  const list = [originLatLng];
+  taxiStops.forEach(s => { if(s.lat != null) list.push([s.lat, s.lng]); });
+  list.push(destLatLng);
+  return list;
+}
+function refreshStopMarkers(){
+  stopMarkers.forEach(m => map.removeLayer(m));
+  stopMarkers = taxiStops.map((s, i) => {
+    if(s.lat == null) return null;
+    const m = L.marker([s.lat, s.lng], { icon: L.divIcon({
+      className:'', html:`<div style="width:24px;height:24px;border-radius:50%;background:var(--amber);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font:700 11px 'Space Grotesk',sans-serif;color:#0E1A24;">${i+2}</div>`,
+      iconSize:[24,24], iconAnchor:[12,12]
+    }) }).addTo(map);
+    return m;
+  }).filter(Boolean);
+}
+function renderTaxiStops(){
+  const wrap = document.getElementById('taxiStopsList');
+  wrap.innerHTML = '';
+  taxiStops.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'taxi-stop-row';
+    const inputId = 'stop-input-' + s.id;
+    row.innerHTML = `<div class="taxi-stop-dot"></div>
+      <input class="field-input" id="${inputId}" placeholder="Titik ${i+2} (mis. tujuan B)" value="${s.name || ''}">
+      <button class="stop-remove-btn" title="Hapus titik">
+        <svg class="icon" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>
+      </button>`;
+    row.querySelector('.stop-remove-btn').addEventListener('click', () => removeTaxiStop(s.id));
+    wrap.appendChild(row);
+    wireSearchInput(document.getElementById(inputId), 'stop:' + s.id);
+  });
+}
+function addTaxiStop(){
+  if(taxiStops.length >= 6){ showToast('Maksimal 6 titik tambahan sekali jalan', false); return; }
+  taxiStops.push({ id: 'ts' + (stopSeq++), name:'', lat:null, lng:null });
+  renderTaxiStops();
+}
+function removeTaxiStop(id){
+  taxiStops = taxiStops.filter(s => s.id !== id);
+  renderTaxiStops();
+  refreshStopMarkers();
+}
+
+function wireSearchInput(inputEl, targetId){
+  inputEl.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = inputEl.value.trim();
+    activeSearchTarget = targetId;
+    if(q.length < 3){ document.getElementById('searchResults').classList.remove('open'); return; }
+    searchTimer = setTimeout(async () => {
+      try{
+        const list = await nominatimSearch(q);
+        if(activeSearchTarget === targetId) renderResults(list, targetId);
+      }catch(e){ /* silent fail, network hiccup */ }
+    }, 420);
+  });
+}
+
+/* ================= ROUTING ================= */
+function buildStepIcon(type, modifier){
+  if(type === 'DepartLeft' || type === 'DepartRight' || type === 'Depart') return ICON.pinSm;
+  if(type === 'ArriveLeft' || type === 'ArriveRight' || type === 'Arrive') return ICON.flag;
+  if(type === 'Roundabout' || type === 'Rotary') return ICON.roundabout;
+  if(modifier && modifier.includes('left')) return ICON.turnLeft;
+  if(modifier && modifier.includes('right')) return ICON.turnRight;
+  return ICON.straight;
+}
+
+function translateInstruction(text){
+  if(!text) return '';
+  const dirMap = { northeast:'timur laut', northwest:'barat laut', southeast:'tenggara', southwest:'barat daya', north:'utara', south:'selatan', east:'timur', west:'barat' };
+  let t = text;
+  t = t.replace(/^(Drive|Walk|Bike|Ride|Head)\s+(northeast|northwest|southeast|southwest|north|south|east|west)\b/i, (m,verb,d)=> 'Menuju arah ' + (dirMap[d.toLowerCase()] || d));
+  t = t.replace(/^Turn slight left/i, 'Belok sedikit ke kiri');
+  t = t.replace(/^Turn slight right/i, 'Belok sedikit ke kanan');
+  t = t.replace(/^Turn sharp left/i, 'Belok tajam ke kiri');
+  t = t.replace(/^Turn sharp right/i, 'Belok tajam ke kanan');
+  t = t.replace(/^Turn left/i, 'Belok kiri');
+  t = t.replace(/^Turn right/i, 'Belok kanan');
+  t = t.replace(/^Continue straight/i, 'Lurus terus');
+  t = t.replace(/^Continue onto/i, 'Lanjutkan menuju');
+  t = t.replace(/^Continue/i, 'Lanjutkan');
+  t = t.replace(/^Keep left/i, 'Ambil jalur kiri');
+  t = t.replace(/^Keep right/i, 'Ambil jalur kanan');
+  t = t.replace(/^Merge left/i, 'Bergabung ke kiri');
+  t = t.replace(/^Merge right/i, 'Bergabung ke kanan');
+  t = t.replace(/^Merge/i, 'Bergabung');
+  t = t.replace(/^Make a U-?turn/i, 'Putar balik');
+  t = t.replace(/^Enter the roundabout and take the (\d+)\w* exit/i, 'Masuk bundaran, ambil keluar ke-$1');
+  t = t.replace(/^Enter the roundabout/i, 'Masuk bundaran');
+  t = t.replace(/^Exit the roundabout/i, 'Keluar dari bundaran');
+  t = t.replace(/^Take exit (\d+)/i, 'Ambil keluar ke-$1');
+  t = t.replace(/^You have arrived at your destination.*/i, 'Anda telah tiba di tujuan');
+  t = t.replace(/^Waypoint \d+ reached/i, 'Titik transit tercapai');
+  t = t.replace(/ to stay on/i, ' agar tetap di');
+  t = t.replace(/ onto /i, ' menuju ');
+  t = t.replace(/ on /i, ' di ');
+  return t;
+}
+
+function formatDuration(sec){
+  const min = Math.round(sec/60);
+  if(min < 60) return `${min} menit`;
+  const h = Math.floor(min/60), m = min%60;
+  return `${h} jam ${m} menit`;
+}
+function formatDistance(m){
+  if(m < 1000) return `${Math.round(m)} m`;
+  return `${(m/1000).toFixed(1)} km`;
+}
+
+function clearRoute(){
+  if(routingControl){ map.removeControl(routingControl); routingControl = null; }
+  clearRouteLayers();
+  document.getElementById('bottomSheet').classList.remove('show');
+  document.getElementById('sumSpeedBadge').style.display = 'none';
+  currentRouteCoords = [];
+  currentManeuvers = [];
+  voiceStepIndex = 0;
+  lastRouteData = null;
+  lastRouteSource = null;
+  activeTripIndex = 0;
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function buildExcludeParam(){
+  if(currentMode !== 'car' && currentMode !== 'motor') return null;
+  const ex = [];
+  if(SETTINGS.avoidToll) ex.push('toll');
+  if(SETTINGS.avoidHighway) ex.push('motorway');
+  return ex.length ? ex.join(',') : null;
+}
+
+/* ================= TAMPILAN PANDUAN (dipakai bersama oleh Valhalla & cadangan OSRM) ================= */
+function renderGuidance(coordsLatLng, maneuvers, totalTimeSec, totalDistM){
+  currentRouteCoords = coordsLatLng;
+  currentManeuvers = maneuvers.map(m => Object.assign({ _voiceState:0 }, m));
+  voiceStepIndex = 0;
+
+  document.getElementById('sumTime').textContent = formatDuration(totalTimeSec);
+  document.getElementById('sumDist').textContent = formatDistance(totalDistM);
+
+  const avgKmh = totalTimeSec > 0 ? (totalDistM/1000) / (totalTimeSec/3600) : 0;
+  document.getElementById('sumAvgSpeed').textContent = avgKmh > 0 ? `· rata-rata ${Math.round(avgKmh)} km/j` : '';
+
+  const arrivalEl = document.getElementById('sumArrival');
+  if(SETTINGS.showClock){
+    const arrival = new Date(Date.now() + totalTimeSec*1000);
+    const jam = String(arrival.getHours()).padStart(2,'0');
+    const mnt = String(arrival.getMinutes()).padStart(2,'0');
+    arrivalEl.textContent = `Tiba sekitar pukul ${jam}:${mnt}`;
+    arrivalEl.style.display = 'block';
+  } else {
+    arrivalEl.style.display = 'none';
+  }
+
+  const stepsWrap = document.getElementById('stepsList');
+  stepsWrap.innerHTML = '';
+  currentManeuvers.forEach((m, idx) => {
+    const div = document.createElement('div');
+    div.className = 'step-item';
+    div.style.animationDelay = (idx*0.03)+'s';
+    div.innerHTML = `<div class="step-icon">${m.icon || ICON.straight}</div>
+      <div><div class="step-text">${translateInstruction(m.text)}</div><div class="step-dist">${formatDistance(m.distanceM)}</div></div>`;
+    stepsWrap.appendChild(div);
+  });
+
+  document.getElementById('directionsPanel').classList.remove('show');
+  document.getElementById('searchResults').classList.remove('open');
+  document.getElementById('bottomSheet').classList.remove('expanded');
+  document.getElementById('bottomSheet').classList.add('show');
+  followMode = false;
+  document.getElementById('btnLocate').classList.remove('active');
+
+  speak(`Rute ditemukan. Jarak ${formatDistance(totalDistM)}, estimasi ${formatDuration(totalTimeSec)}.`);
+}
+
+/* ================= GRAPHHOPPER (mesin rute utama, butuh API key gratis) ================= */
+// GraphHopper hosted API TIDAK gratis-tanpa-akun seperti OSRM/Valhalla — wajib pakai API key
+// (daftar gratis di graphhopper.com). Kalau key kosong atau gagal, otomatis lempar ke Valhalla lalu OSRM.
+const GRAPHHOPPER_URL = "https://graphhopper.com/api/1/route";
+// Profil "motorcycle" resmi GraphHopper hanya tersedia untuk akun enterprise/khusus,
+// jadi mode Motor sengaja TIDAK lewat GraphHopper — otomatis pakai Valhalla (punya profil motorcycle asli).
+const GRAPHHOPPER_PROFILE = { car: "car", bike: "bike", foot: "foot" };
+
+function buildGHCustomModel(){
+  const rules = [];
+  // multiply_by "0" = jalan itu praktis diblokir (bukan cuma dikurangi prioritasnya),
+  // ini mekanisme avoid paling kuat yang tersedia di custom_model GraphHopper.
+  if(SETTINGS.avoidToll) rules.push({ if: "toll == ALL", multiply_by: "0" });
+  if(SETTINGS.avoidHighway) rules.push({ if: "road_class == MOTORWAY", multiply_by: "0" });
+  return rules.length ? { priority: rules } : null;
+}
+
+async function fetchGraphHopperRoute(){
+  if(!SETTINGS.graphhopperKey) throw new Error('gh-no-key');
+  const profile = GRAPHHOPPER_PROFILE[currentMode];
+  if(!profile) throw new Error('gh-unsupported-mode');
+
+  const customModel = buildGHCustomModel();
+  const body = {
+    points: buildWaypointList().map(pt => [pt[1], pt[0]]),
+    profile: profile,
+    points_encoded: false,
+    instructions: true,
+    locale: "en"
+  };
+  if(customModel){
+    body["ch.disable"] = true;
+    body.custom_model = customModel;
+  } else if(taxiStops.length === 0){
+    body.algorithm = "alternative_route";
+    body["alternative_route.max_paths"] = 2;
+  }
+
+  const res = await fetch(`${GRAPHHOPPER_URL}?key=${encodeURIComponent(SETTINGS.graphhopperKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(() => '');
+    throw new Error('GraphHopper HTTP ' + res.status + ' ' + errText.slice(0,200));
+  }
+  const data = await res.json();
+  if(!data.paths || !data.paths.length) throw new Error('Respons GraphHopper tidak valid');
+  return data;
+}
+
+function ghManeuverIcon(sign){
+  if(sign === 4) return ICON.flag;
+  if(sign === 5) return ICON.pinSm;
+  if(sign === 6 || sign === -6) return ICON.roundabout;
+  if(sign > 0) return ICON.turnRight;
+  if(sign < 0) return ICON.turnLeft;
+  return ICON.straight;
+}
+function ghCoordsFromPath(path){
+  return path.points.coordinates.map(c => [c[1], c[0]]);
+}
+function ghManeuversFromPath(path){
+  return path.instructions.map(ins => ({
+    text: ins.text,
+    distanceM: ins.distance,
+    icon: ghManeuverIcon(ins.sign),
+    coordIndex: ins.interval ? ins.interval[0] : 0
+  }));
+}
+
+/* ---- Adapter generik: samakan bentuk data dari GraphHopper & Valhalla ---- */
+function getTripsGeneric(){
+  if(lastRouteSource === 'graphhopper') return lastRouteData.paths;
+  if(lastRouteSource === 'valhalla') return tripsFromData(lastRouteData);
+  return [];
+}
+function getCoordsGeneric(trip){
+  return lastRouteSource === 'graphhopper' ? ghCoordsFromPath(trip) : coordsFromTrip(trip);
+}
+function getManeuversGeneric(trip){
+  return lastRouteSource === 'graphhopper' ? ghManeuversFromPath(trip) : maneuversFromTrip(trip);
+}
+function getSummaryGeneric(trip){
+  if(lastRouteSource === 'graphhopper') return { time: trip.time / 1000, distance: trip.distance };
+  return { time: trip.summary.time, distance: trip.summary.length * 1000 };
+}
+
+/* ================= VALHALLA (cadangan pertama, sekaligus mesin untuk mode Motor) ================= */
+function buildValhallaCostingOptions(mode){
+  if(mode !== 'car' && mode !== 'motor') return undefined;
+  const opts = {};
+  if(SETTINGS.avoidToll){ opts.use_tolls = 0; opts.toll_booth_penalty = 43200; }
+  if(SETTINGS.avoidHighway){ opts.use_highways = 0; }
+  return Object.keys(opts).length ? { [VALHALLA_COSTING[mode]]: opts } : undefined;
+}
+
+async function fetchValhallaRoute(){
+  const costing = VALHALLA_COSTING[currentMode];
+  const body = {
+    locations: buildWaypointList().map(pt => ({ lat: pt[0], lon: pt[1] })),
+    costing: costing,
+    units: "kilometers",
+    language: "en-US",
+    directions_options: { units: "kilometers", language: "en-US" },
+    alternates: taxiStops.length === 0 ? 2 : 0
+  };
+  const costingOptions = buildValhallaCostingOptions(currentMode);
+  if(costingOptions) body.costing_options = costingOptions;
+
+  const res = await fetch(VALHALLA_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok) throw new Error('Valhalla HTTP ' + res.status);
+  const data = await res.json();
+  if(!data.trip || !data.trip.legs) throw new Error('Respons Valhalla tidak valid');
+  return data;
+}
+
+function tripsFromData(data){
+  return [data.trip, ...((data.alternates || []).map(a => a.trip))];
+}
+function coordsFromTrip(trip){
+  let pts = [];
+  trip.legs.forEach(leg => { pts = pts.concat(decodePolyline6(leg.shape)); });
+  return pts;
+}
+function maneuversFromTrip(trip){
+  const list = [];
+  let shapeOffset = 0;
+  trip.legs.forEach(leg => {
+    const legCoords = decodePolyline6(leg.shape);
+    leg.maneuvers.forEach(m => {
+      list.push({
+        text: m.instruction,
+        distanceM: (m.length || 0) * 1000,
+        icon: valhallaManeuverIcon(m.type),
+        coordIndex: shapeOffset + (m.begin_shape_index || 0)
+      });
+    });
+    shapeOffset += legCoords.length;
+  });
+  return list;
+}
+
+function clearRouteLayers(){
+  routeLayers.forEach(l => map.removeLayer(l));
+  routeLayers = [];
+  activeCasing = null; activeTraveled = null; activeRemaining = null; activeFullCoords = []; lastNearestIdx = 0;
+}
+
+function renderRoutes(){
+  clearRouteLayers();
+  if(!lastRouteData) return;
+  const trips = getTripsGeneric();
+  trips.forEach((trip, idx) => {
+    if(idx === activeTripIndex) return;
+    const coords = getCoordsGeneric(trip);
+    const line = L.polyline(coords, { color:'#9AA6B4', weight:4, opacity:0.85 }).addTo(map);
+    line.on('click', () => setActiveTrip(idx));
+    routeLayers.push(line);
+  });
+  activeFullCoords = getCoordsGeneric(trips[activeTripIndex]);
+  lastNearestIdx = 0;
+  const accent = currentAccentColor();
+  // Rute aktif digambar 2 lapis: bagian yang sudah dilewati (abu-abu, seperti Google Maps) + sisa rute (warna tema)
+  activeCasing = L.polyline(activeFullCoords, { color:'#0E1A24', opacity:0.5, weight:9 }).addTo(map);
+  activeTraveled = L.polyline([activeFullCoords[0]], { color:'#9AA6B4', opacity:0.9, weight:5 }).addTo(map);
+  activeRemaining = L.polyline(activeFullCoords, { color: accent, opacity:0.95, weight:5 }).addTo(map);
+  routeLayers.push(activeCasing, activeTraveled, activeRemaining);
+}
+
+/* ---- Perbarui bagian rute yang sudah dilewati jadi abu-abu, mirip Google Maps ---- */
+function nearestIndexOnRoute(pt, coords){
+  const windowStart = Math.max(0, lastNearestIdx - 50);
+  const windowEnd = Math.min(coords.length, lastNearestIdx + 300);
+  let minD = Infinity, minI = lastNearestIdx;
+  for(let i = windowStart; i < windowEnd; i++){
+    const d = distMeters(pt[0], pt[1], coords[i][0], coords[i][1]);
+    if(d < minD){ minD = d; minI = i; }
+  }
+  return minI;
+}
+function updateTraveledProgress(lat, lng){
+  if(!activeFullCoords.length || !activeTraveled || !activeRemaining) return;
+  const idx = nearestIndexOnRoute([lat, lng], activeFullCoords);
+  lastNearestIdx = idx;
+  activeTraveled.setLatLngs(activeFullCoords.slice(0, idx + 1));
+  activeRemaining.setLatLngs(activeFullCoords.slice(idx));
+}
+
+/* ---- Deteksi keluar rute -> otomatis pindah ke rute alternatif, atau hitung ulang ---- */
+function distToSegmentMeters(p, a, b){
+  const toXY = (pt) => [pt[1]*111320*Math.cos(pt[0]*Math.PI/180), pt[0]*110540];
+  const P = toXY(p), A = toXY(a), B = toXY(b);
+  const dx = B[0]-A[0], dy = B[1]-A[1];
+  const lenSq = dx*dx + dy*dy;
+  let t = lenSq ? ((P[0]-A[0])*dx + (P[1]-A[1])*dy) / lenSq : 0;
+  t = Math.max(0, Math.min(1, t));
+  const cx = A[0]+t*dx, cy = A[1]+t*dy;
+  return Math.hypot(P[0]-cx, P[1]-cy);
+}
+function distanceToPolyline(pt, coords){
+  let min = Infinity;
+  for(let i = 0; i < coords.length - 1; i++){
+    const d = distToSegmentMeters(pt, coords[i], coords[i+1]);
+    if(d < min) min = d;
+  }
+  return min;
+}
+async function handleOffRoute(lat, lng){
+  showToast('Anda keluar dari rute, mencari rute baru...', true);
+  speak('Menghitung ulang rute.');
+  // 1) Coba rute alternatif yang sudah ada dulu (cepat, mirip Google Maps)
+  if(lastRouteSource === 'valhalla' && lastRouteData){
+    const trips = getTripsGeneric();
+    for(let i = 0; i < trips.length; i++){
+      if(i === activeTripIndex) continue;
+      const coords = getCoordsGeneric(trips[i]);
+      if(distanceToPolyline([lat, lng], coords) < 60){
+        setActiveTrip(i);
+        hideToast();
+        showToast('Beralih ke rute alternatif', false);
+        return;
+      }
+    }
+  }
+  // 2) Tidak ada alternatif yang cocok -> hitung ulang rute baru dari posisi sekarang (tetap sediakan rute cadangan baru)
+  originLatLng = [lat, lng];
+  document.getElementById('inputOrigin').value = 'Lokasi Anda';
+  document.getElementById('inputOrigin').dataset.auto = '1';
+  await computeRoute();
+}
+function checkOffRoute(lat, lng){
+  if(!activeFullCoords.length) return;
+  const now = Date.now();
+  if(now - lastRerouteTime < 12000) return; // jeda supaya tidak hitung ulang berkali-kali
+  const d = distanceToPolyline([lat, lng], activeFullCoords);
+  if(d > 60){
+    lastRerouteTime = now;
+    handleOffRoute(lat, lng);
+  }
+}
+
+function setActiveTrip(idx){
+  activeTripIndex = idx;
+  renderRoutes();
+  const trips = getTripsGeneric();
+  const trip = trips[idx];
+  const summary = getSummaryGeneric(trip);
+  renderGuidance(getCoordsGeneric(trip), getManeuversGeneric(trip), summary.time, summary.distance);
+}
+
+function tryRouteWithServer(serverIndex){
+  const servers = OSRM_PROFILE[currentMode];
+  if(serverIndex >= servers.length){
+    showToast('Semua server rute sedang tidak bisa dijangkau. Cek koneksi internet Anda, atau coba lagi sebentar lagi.', false);
+    return;
+  }
+  const cfg = servers[serverIndex];
+
+  if(routingControl){ map.removeControl(routingControl); routingControl = null; }
+  clearRouteLayers();
+
+  const routerOpts = { serviceUrl: cfg.serviceUrl, profile: cfg.profile, useHints: false };
+  const exclude = buildExcludeParam();
+  if(exclude) routerOpts.requestParameters = { exclude: exclude };
+
+  routingControl = L.Routing.control({
+    waypoints: buildWaypointList().map(pt => L.latLng(pt[0], pt[1])),
+    router: L.Routing.osrmv1(routerOpts),
+    addWaypoints: false,
+    draggableWaypoints: false,
+    fitSelectedRoutes: true,
+    show: false,
+    showAlternatives: taxiStops.length === 0,
+    lineOptions: { styles: [ { color:'#0E1A24', opacity:0.5, weight:9 }, { color:'#2EC4B6', opacity:0.95, weight:5 } ], addWaypoints:false },
+    altLineOptions: { styles: [ { color:'#0E1A24', opacity:0.35, weight:8 }, { color:'#9AA6B4', opacity:0.85, weight:4 } ], addWaypoints:false },
+    createMarker: function(i, wp, n){
+      if(i === 0){
+        return L.marker(wp.latLng, { icon: L.divIcon({ className:'pin-origin', html: ICON.origin, iconSize:[22,22], iconAnchor:[11,11] }) });
+      }
+      if(i === n - 1){
+        return L.marker(wp.latLng, { icon: L.divIcon({ className:'pin-dest', html: ICON.pin, iconSize:[34,44], iconAnchor:[17,44] }) });
+      }
+      return L.marker(wp.latLng, { icon: L.divIcon({
+        className:'', html:`<div style="width:24px;height:24px;border-radius:50%;background:var(--amber);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;font:700 11px 'Space Grotesk',sans-serif;color:#0E1A24;">${i+1}</div>`,
+        iconSize:[24,24], iconAnchor:[12,12]
+      }) });
+    }
+  }).addTo(map);
+
+  routingControl.on('routesfound', function(e){
+    const route = e.routes[0];
+    const coords = route.coordinates.map(c => [c.lat, c.lng]);
+    const maneuvers = route.instructions.map(ins => ({
+      text: ins.text,
+      distanceM: ins.distance,
+      icon: buildStepIcon(ins.type, ins.modifier),
+      coordIndex: ins.index || 0
+    }));
+    renderGuidance(coords, maneuvers, route.summary.totalTime, route.summary.totalDistance);
+    showToast('Rute dihitung pakai server cadangan (OSRM), Valhalla sedang tidak terjangkau.', false);
+  });
+
+  routingControl.on('routingerror', function(e){
+    // Info detail error ditulis ke console supaya mudah didiagnosis (F12 > Console)
+    console.error('JCMaps routing error dari', cfg.serviceUrl, e.error || e);
+    const reason = e && e.error && e.error.message ? e.error.message : '';
+    if(/NoRoute|NoSegment/i.test(reason)){
+      showToast('Tidak ditemukan jalur antara dua lokasi tersebut.', false);
+      return;
+    }
+    // coba server cadangan berikutnya secara otomatis
+    tryRouteWithServer(serverIndex + 1);
+  });
+}
+
+async function computeRoute(){
+  if(!originLatLng && document.getElementById('inputOrigin').dataset.lat){
+    originLatLng = [parseFloat(document.getElementById('inputOrigin').dataset.lat), parseFloat(document.getElementById('inputOrigin').dataset.lng)];
+  }
+  if(!originLatLng || !destLatLng){
+    showToast('Tentukan lokasi asal dan tujuan terlebih dahulu', false);
+    return;
+  }
+
+  if(!originMarker){
+    originMarker = L.marker(originLatLng, { icon: L.divIcon({ className:'pin-origin', html: ICON.origin, iconSize:[22,22], iconAnchor:[11,11] }) }).addTo(map);
+  } else {
+    originMarker.setLatLng(originLatLng);
+  }
+  if(!destMarker){
+    destMarker = L.marker(destLatLng, { icon: L.divIcon({ className:'pin-dest', html: ICON.pin, iconSize:[34,44], iconAnchor:[17,44] }) }).addTo(map);
+  } else {
+    destMarker.setLatLng(destLatLng);
+  }
+  refreshStopMarkers();
+
+  clearRoute();
+  showToast('Menghitung rute...', true);
+
+  // 1) GraphHopper (utama, kalau API key diisi) -> 2) Valhalla (cadangan / mesin asli mode Motor) -> 3) OSRM (cadangan terakhir)
+  if(currentMode !== 'motor' && SETTINGS.graphhopperKey){
+    try{
+      const data = await fetchGraphHopperRoute();
+      lastRouteData = data; lastRouteSource = 'graphhopper';
+      setActiveTrip(0);
+      map.fitBounds(L.latLngBounds(getCoordsGeneric(data.paths[0])), { padding:[70,70] });
+      addHistoryEntry(
+        document.getElementById('inputOrigin').value,
+        document.getElementById('inputDest').value,
+        currentMode, data.paths[0].distance, data.paths[0].time / 1000
+      );
+      hideToast();
+      return;
+    }catch(ghErr){
+      console.error('JCMaps: GraphHopper gagal, coba Valhalla.', ghErr);
+    }
+  }
+
+  try{
+    const data = await fetchValhallaRoute();
+    lastRouteData = data; lastRouteSource = 'valhalla';
+    setActiveTrip(0);
+    map.fitBounds(L.latLngBounds(getCoordsGeneric(data.trip)), { padding:[70,70] });
+    addHistoryEntry(
+      document.getElementById('inputOrigin').value,
+      document.getElementById('inputDest').value,
+      currentMode, data.trip.summary.length * 1000, data.trip.summary.time
+    );
+  }catch(err){
+    console.error('JCMaps: Valhalla juga tidak terjangkau, beralih ke OSRM cadangan.', err);
+    tryRouteWithServer(0);
+  }
+  hideToast();
+}
+
+/* ================= UI WIRING ================= */
+function init(){
+  initMap();
+  wireSearchInput(document.getElementById('searchInput'), 'quick');
+  wireSearchInput(document.getElementById('inputOrigin'), 'inputOrigin');
+  wireSearchInput(document.getElementById('inputDest'), 'inputDest');
+
+  document.getElementById('inputOrigin').addEventListener('focus', () => { document.getElementById('inputOrigin').dataset.auto = '0'; });
+
+  document.getElementById('btnDirectionsToggle').addEventListener('click', () => {
+    const panel = document.getElementById('directionsPanel');
+    panel.classList.toggle('show');
+    document.getElementById('searchResults').classList.remove('open');
+    if(panel.classList.contains('show') && document.getElementById('inputOrigin').value === '' && gpsMarker){
+      document.getElementById('inputOrigin').value = 'Lokasi Anda';
+      document.getElementById('inputOrigin').dataset.auto = '1';
+      originLatLng = null;
+    }
+  });
+
+  document.getElementById('btnSwap').addEventListener('click', (e) => {
+    e.currentTarget.classList.add('spin');
+    setTimeout(()=> e.currentTarget.classList.remove('spin'), 320);
+    const o = document.getElementById('inputOrigin'), d = document.getElementById('inputDest');
+    const tmpVal = o.value; o.value = d.value; d.value = tmpVal;
+    const tmpLL = originLatLng; originLatLng = destLatLng; destLatLng = tmpLL;
+    checkGoEnabled();
+  });
+
+  document.querySelectorAll('.modebtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.modebtn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentMode = btn.dataset.mode;
+      if(routingControl || lastRouteData) computeRoute();
+    });
+  });
+
+  document.getElementById('btnGo').addEventListener('click', computeRoute);
+
+  document.getElementById('btnNav').addEventListener('click', () => {
+    if(navMode) exitNavMode();
+    else enterNavMode();
+  });
+
+  document.getElementById('btnLocate').addEventListener('click', () => {
+    followMode = true;
+    document.getElementById('btnLocate').classList.add('active');
+    if(gpsMarker){ centerOnUser(true); }
+    else { requestGeolocation(); }
+  });
+
+  map.on('dragstart', () => {
+    followMode = false;
+    document.getElementById('btnLocate').classList.remove('active');
+    if(navMode){
+      exitNavMode();
+      showToast('Mode navigasi dihentikan. Tap tombol navigasi untuk lanjut.', false);
+    }
+  });
+
+  document.getElementById('btnLayers').addEventListener('click', () => {
+    const keys = Object.keys(TILE_LAYERS);
+    const idx = keys.indexOf(currentTileKey);
+    setTileLayer(keys[(idx+1) % keys.length]);
+  });
+
+  document.getElementById('btnZoomIn').addEventListener('click', () => { if(navMode) exitNavMode(); map.zoomIn(); });
+  document.getElementById('btnZoomOut').addEventListener('click', () => { if(navMode) exitNavMode(); map.zoomOut(); });
+
+  document.getElementById('sheetHandle').addEventListener('click', () => {
+    document.getElementById('bottomSheet').classList.toggle('expanded');
+  });
+  document.querySelector('.sheet-summary').addEventListener('click', (e) => {
+    if(e.target.closest('#btnSheetClose')) return;
+    document.getElementById('bottomSheet').classList.toggle('expanded');
+  });
+  document.getElementById('btnSheetClose').addEventListener('click', () => {
+    clearRoute();
+  });
+  document.getElementById('btnVoiceToggle').addEventListener('click', () => {
+    SETTINGS.voice = !SETTINGS.voice;
+    saveSettings();
+    applySettingsToUI();
+    if(!SETTINGS.voice && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  });
+
+  /* ---- Menu Tersimpan & Pengaturan ---- */
+  document.getElementById('btnMenu').addEventListener('click', () => {
+    document.getElementById('menuSheet').classList.add('show');
+    renderPlacesList();
+  });
+  document.getElementById('btnMenuClose').addEventListener('click', () => {
+    document.getElementById('menuSheet').classList.remove('show');
+    document.getElementById('tabHistory').style.display = 'none';
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.menu-tab[data-tab="places"]').classList.add('active');
+    document.getElementById('tabPlaces').style.display = 'block';
+    document.getElementById('tabSettings').style.display = 'none';
+  });
+  document.querySelectorAll('.menu-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tabHistory').style.display = 'none';
+      document.getElementById('tabPlaces').style.display = tab.dataset.tab === 'places' ? 'block' : 'none';
+      document.getElementById('tabSettings').style.display = tab.dataset.tab === 'settings' ? 'block' : 'none';
+    });
+  });
+
+  /* ---- Riwayat Perjalanan ---- */
+  document.getElementById('btnOpenHistory').addEventListener('click', () => {
+    document.getElementById('tabSettings').style.display = 'none';
+    document.getElementById('tabHistory').style.display = 'block';
+    renderHistoryList();
+  });
+  document.getElementById('btnHistoryBack').addEventListener('click', () => {
+    document.getElementById('tabHistory').style.display = 'none';
+    document.getElementById('tabSettings').style.display = 'block';
+  });
+  document.getElementById('btnHistoryClear').addEventListener('click', () => {
+    if(!HISTORY.length) return;
+    if(confirm('Hapus semua riwayat perjalanan? Tindakan ini tidak bisa dibatalkan.')){
+      HISTORY = [];
+      saveHistory();
+      renderHistoryList();
+      updateHistoryHint();
+    }
+  });
+
+  /* ---- Toggle setelan (Suara, Hindari Tol/Raya/Macet) ---- */
+  document.querySelectorAll('.toggle-switch[data-setting]').forEach(el => {
+    el.addEventListener('click', () => {
+      const key = el.dataset.setting;
+      SETTINGS[key] = !SETTINGS[key];
+      el.classList.toggle('on', SETTINGS[key]);
+      saveSettings();
+      if(key === 'voice'){
+        applySettingsToUI();
+        if(!SETTINGS.voice && 'speechSynthesis' in window){ window.speechSynthesis.cancel(); }
+      }
+      if((key === 'avoidToll' || key === 'avoidHighway') && (routingControl || lastRouteData)){ computeRoute(); }
+      if(key === 'neonEffect'){ document.body.classList.toggle('neon-mode', SETTINGS.neonEffect); }
+      if(key === 'showCoords'){ document.getElementById('coordsOverlay').style.display = SETTINGS.showCoords ? 'block' : 'none'; }
+      if(key === 'showClock' && currentManeuvers.length){
+        // segarkan tampilan jam tiba tanpa hitung ulang rute
+        const arrivalEl = document.getElementById('sumArrival');
+        if(SETTINGS.showClock){
+          arrivalEl.style.display = 'block';
+        } else {
+          arrivalEl.style.display = 'none';
+        }
+      }
+      if(key === 'buildings3d'){
+        setTileLayer(SETTINGS.buildings3d ? 'voyager' : 'standard');
+        showToast(SETTINGS.buildings3d
+          ? 'Mode bayangan gedung aktif — peta ini 2D, bukan 3D sungguhan'
+          : 'Mode bayangan gedung dimatikan', false);
+      }
+      if(key === 'taxiMode'){
+        document.getElementById('taxiStopsSection').style.display = SETTINGS.taxiMode ? 'block' : 'none';
+        if(!SETTINGS.taxiMode){
+          taxiStops = [];
+          stopMarkers.forEach(m => map.removeLayer(m));
+          stopMarkers = [];
+        }
+        showToast(SETTINGS.taxiMode ? 'Mode Taksi aktif — bisa tambah titik A-B-C-...' : 'Mode Taksi dimatikan', false);
+      }
+      if(key === 'courierMode'){
+        document.getElementById('placeFilterChips').style.display = SETTINGS.courierMode ? 'flex' : 'none';
+        if(!SETTINGS.courierMode){ activePlaceFilter = 'semua'; }
+        renderPlacesList();
+        showToast(SETTINGS.courierMode
+          ? 'Mode Pengiriman Kurir aktif — tekan & tahan di peta untuk tandai Gudang Sortir/Transit/Rumah Penerima'
+          : 'Mode Pengiriman Kurir dimatikan', false);
+      }
+    });
+  });
+
+  document.getElementById('btnAddStop').addEventListener('click', addTaxiStop);
+
+  document.querySelectorAll('#placeFilterChips .font-chip').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('#placeFilterChips .font-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      activePlaceFilter = el.dataset.filter;
+      renderPlacesList();
+    });
+  });
+
+  document.querySelectorAll('#categoryChips .font-chip').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('#categoryChips .font-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      pendingCategory = el.dataset.category;
+    });
+  });
+
+  /* ---- Font aplikasi ---- */
+  document.querySelectorAll('.font-chip[data-font]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.font-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      SETTINGS.fontChoice = el.dataset.font;
+      saveSettings();
+      applyFontChoice(SETTINGS.fontChoice);
+    });
+  });
+
+  /* ---- Warna UI ---- */
+  document.querySelectorAll('.color-swatch[data-color]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.color-swatch').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      SETTINGS.colorTheme = el.dataset.color;
+      saveSettings();
+      applyColorTheme(SETTINGS.colorTheme);
+    });
+  });
+
+  /* ---- Pilihan ikon GPS (motor/mobil/sepeda/orang) ---- */
+  document.querySelectorAll('.gps-chip[data-icon]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.gps-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      SETTINGS.gpsIconType = el.dataset.icon;
+      saveSettings();
+      if(gpsMarker) gpsMarker.setIcon(buildGpsIcon(lastFix ? lastHeading : null));
+    });
+  });
+
+  /* ---- Kunci API GraphHopper ---- */
+  document.getElementById('ghKeyInput').addEventListener('change', (e) => {
+    SETTINGS.graphhopperKey = e.target.value.trim();
+    saveSettings();
+    showToast(SETTINGS.graphhopperKey ? 'API key GraphHopper tersimpan' : 'API key dikosongkan — pakai Valhalla/OSRM', false);
+  });
+
+  /* ---- Dialog simpan penanda tempat ---- */
+  document.getElementById('btnAddCurrentPlace').addEventListener('click', () => {
+    if(!gpsMarker){ showToast('Lokasi GPS belum tersedia', false); return; }
+    const ll = gpsMarker.getLatLng();
+    openPlaceDialog(ll.lat, ll.lng);
+  });
+  document.getElementById('btnPlaceCancel').addEventListener('click', closePlaceDialog);
+  document.getElementById('btnPlaceSave').addEventListener('click', () => {
+    const name = document.getElementById('placeNameInput').value.trim();
+    if(!name || !pendingPlaceLatLng) return;
+    PLACES.push({ id: 'p' + Date.now(), name, lat: pendingPlaceLatLng.lat, lng: pendingPlaceLatLng.lng, category: pendingCategory });
+    savePlaces();
+    renderPlacesList();
+    refreshSavedPlaceMarkers();
+    closePlaceDialog();
+    showToast('Lokasi disimpan', false);
+  });
+
+  /* ---- Tekan & tahan di peta untuk menandai lokasi ---- */
+  map.on('mousedown', (e) => {
+    pressLatLng = e.latlng;
+    pressTimer = setTimeout(() => {
+      if(!pressLatLng) return;
+      if(tempPlaceMarker) map.removeLayer(tempPlaceMarker);
+      tempPlaceMarker = L.marker(pressLatLng, { icon: L.divIcon({ className:'pin-saved', html: ICON.pinStar, iconSize:[28,36], iconAnchor:[14,36] }) }).addTo(map);
+      openPlaceDialog(pressLatLng.lat, pressLatLng.lng);
+    }, 600);
+  });
+  map.on('drag mousemove', () => { clearTimeout(pressTimer); });
+  map.on('mouseup', () => { clearTimeout(pressTimer); });
+
+  document.addEventListener('click', (e) => {
+    if(!e.target.closest('#searchPillWrap') && !e.target.closest('#searchResults') && !e.target.closest('#directionsPanel')){
+      document.getElementById('searchResults').classList.remove('open');
+    }
+  });
+
+  /* ---- Peta Offline ---- */
+  document.getElementById('btnDownloadOffline').addEventListener('click', downloadCurrentAreaOffline);
+  document.getElementById('btnClearOfflineMaps').addEventListener('click', async () => {
+    if(confirm('Hapus semua ubin peta offline yang tersimpan?')){
+      try{
+        await clearTileDB();
+        updateOfflineHint();
+        showToast('Semua peta offline sudah dihapus', false);
+      }catch(e){
+        showToast('Gagal menghapus penyimpanan offline', false);
+      }
+    }
+  });
+
+  // muat setelan & penanda tempat tersimpan dari localStorage
+  loadSettings();
+  loadPlaces();
+  loadHistory();
+  applySettingsToUI();
+  updateHistoryHint();
+  updateOfflineHint();
+  refreshSavedPlaceMarkers();
+
+  // auto request location on load
+  requestGeolocation();
+}
+
+window.addEventListener('load', init);
+})();
+</script>
+</body>
+</html>
