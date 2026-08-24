@@ -18,12 +18,15 @@
   --amber:#F2A93B;
   --amber-dim:#B97F22;
   --teal:#2EC4B6;
+  --teal-bright:#3FE0D0;
   --cream:#F6F4EE;
   --gray:#7C8896;
   --line:#2A3D52;
   --danger:#E85D5D;
   --radius:16px;
   --shadow: 0 10px 30px rgba(6,12,20,0.35);
+  --shadow-soft: 0 6px 18px rgba(6,12,20,0.28), 0 1px 0 rgba(255,255,255,0.03) inset;
+  --glow-teal: 0 0 0 1px rgba(46,196,182,0.25), 0 8px 24px rgba(46,196,182,0.22);
 }
 
 *{box-sizing:border-box;}
@@ -52,20 +55,21 @@ body{background:var(--navy);}
 .searchpill{
   pointer-events:auto;
   display:flex;align-items:center;gap:10px;
-  background:rgba(22,39,58,0.92);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--line);
+  background:rgba(22,39,58,0.88);
+  backdrop-filter:blur(14px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.08);
   border-radius:999px;
-  padding:10px 14px;
-  box-shadow:var(--shadow);
-  transition:box-shadow .25s ease, transform .25s ease;
+  padding:11px 14px;
+  box-shadow:var(--shadow), 0 1px 0 rgba(255,255,255,0.06) inset;
+  transition:box-shadow .25s ease, transform .25s ease, border-color .25s ease;
 }
-.searchpill:focus-within{box-shadow:0 12px 34px rgba(46,196,182,0.18);border-color:rgba(46,196,182,0.55);}
+.searchpill:focus-within{box-shadow:var(--glow-teal), 0 1px 0 rgba(255,255,255,0.06) inset;border-color:rgba(46,196,182,0.5);}
 .logo-mark{
-  width:34px;height:34px;min-width:34px;border-radius:50%;
-  background:radial-gradient(circle at 30% 30%, var(--amber), var(--amber-dim));
+  width:36px;height:36px;min-width:36px;border-radius:50%;
+  background:radial-gradient(circle at 30% 25%, #ffcf7a, var(--amber) 55%, var(--amber-dim));
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 0 3px rgba(242,169,59,0.15);
+  box-shadow:0 0 0 3px rgba(242,169,59,0.15), 0 4px 10px rgba(242,169,59,0.35);
+  transition:transform .3s ease;
 }
 .logo-mark svg{width:18px;height:18px;stroke:var(--navy);}
 #searchInput{
@@ -76,14 +80,15 @@ body{background:var(--navy);}
 .wordmark{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--cream);letter-spacing:0.2px;display:none;}
 .iconbtn{
   pointer-events:auto;
-  width:36px;height:36px;min-width:36px;border-radius:50%;
-  border:none;background:rgba(255,255,255,0.06);color:var(--cream);
+  width:37px;height:37px;min-width:37px;border-radius:50%;
+  border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.06);color:var(--cream);
   display:flex;align-items:center;justify-content:center;cursor:pointer;
-  transition:transform .15s ease, background .15s ease;
+  box-shadow:0 1px 0 rgba(255,255,255,0.05) inset;
+  transition:transform .15s ease, background .15s ease, box-shadow .2s ease;
 }
-.iconbtn:hover{background:rgba(255,255,255,0.12);}
+.iconbtn:hover{background:rgba(255,255,255,0.13);}
 .iconbtn:active{transform:scale(0.88);}
-.iconbtn.accent{background:var(--teal);color:var(--navy);}
+.iconbtn.accent{background:linear-gradient(135deg, var(--teal-bright), var(--teal));color:var(--navy);box-shadow:var(--glow-teal);}
 
 /* dropdown results */
 #searchResults{
@@ -114,11 +119,11 @@ body{background:var(--navy);}
 /* ---------- DIRECTIONS PANEL ---------- */
 #directionsPanel{
   pointer-events:auto;
-  background:rgba(22,39,58,0.95);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
+  background:rgba(22,39,58,0.9);
+  backdrop-filter:blur(16px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  box-shadow:var(--shadow), 0 1px 0 rgba(255,255,255,0.06) inset;
   padding:14px;
   display:none;
   flex-direction:column;
@@ -150,28 +155,30 @@ body{background:var(--navy);}
 .swapbtn:hover{background:rgba(255,255,255,0.1);}
 .swapbtn.spin{transform:rotate(180deg);}
 
-.modebar{display:flex;gap:6px;}
+.modebar{display:flex;gap:2px;background:rgba(255,255,255,0.04);border:1px solid var(--line);border-radius:14px;padding:3px;}
 .modebtn{
   flex:1;display:flex;align-items:center;justify-content:center;gap:4px;
-  padding:8px 3px;border-radius:10px;border:1px solid var(--line);
-  background:rgba(255,255,255,0.03);color:var(--gray);cursor:pointer;
+  padding:8px 3px;border-radius:11px;border:none;
+  background:transparent;color:var(--gray);cursor:pointer;
   font-size:11px;font-weight:600;font-family:'Inter',sans-serif;
-  transition:all .18s ease;
+  transition:all .22s cubic-bezier(.4,1.2,.6,1);
 }
 .modebtn svg{width:15px;height:15px;}
-.modebtn.active{background:var(--teal);border-color:var(--teal);color:var(--navy);}
+.modebtn.active{background:linear-gradient(135deg, var(--teal-bright), var(--teal));color:var(--navy);box-shadow:0 3px 10px rgba(46,196,182,0.35);}
 .modebtn:active{transform:scale(0.95);}
 
 .gobtn{
-  background:linear-gradient(135deg, var(--teal), #24a89c);
-  color:var(--navy);border:none;border-radius:10px;
-  padding:11px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg, var(--teal-bright), var(--teal) 55%, #1f9a8d);
+  color:var(--navy);border:none;border-radius:12px;
+  padding:12px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;
   cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform .15s ease, filter .15s ease;
+  box-shadow:0 6px 20px rgba(46,196,182,0.35);
+  transition:transform .15s ease, filter .15s ease, box-shadow .2s ease;
 }
-.gobtn:hover{filter:brightness(1.08);}
+.gobtn:hover{filter:brightness(1.06);box-shadow:0 8px 26px rgba(46,196,182,0.45);}
 .gobtn:active{transform:scale(0.97);}
-.gobtn:disabled{opacity:0.45;cursor:not-allowed;}
+.gobtn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none;}
 
 /* ---------- SIDE CONTROLS ---------- */
 #sideControls{
@@ -180,15 +187,16 @@ body{background:var(--navy);}
 }
 .sidebtn{
   width:44px;height:44px;border-radius:50%;
-  background:rgba(22,39,58,0.92);backdrop-filter:blur(8px);
-  border:1px solid var(--line);color:var(--cream);
+  background:rgba(22,39,58,0.88);backdrop-filter:blur(10px) saturate(140%);
+  border:1px solid rgba(255,255,255,0.07);color:var(--cream);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;box-shadow:var(--shadow);
-  transition:transform .15s ease, background .2s ease, color .2s ease;
+  cursor:pointer;box-shadow:var(--shadow-soft);
+  transition:transform .15s ease, background .2s ease, color .2s ease, box-shadow .2s ease;
 }
+.sidebtn:hover{background:rgba(30,51,72,0.92);}
 .sidebtn:active{transform:scale(0.88);}
-.sidebtn.active{background:var(--teal);color:var(--navy);border-color:var(--teal);}
-.zoomgroup{display:flex;flex-direction:column;background:rgba(22,39,58,0.92);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+.sidebtn.active{background:linear-gradient(135deg, var(--teal-bright), var(--teal));color:var(--navy);border-color:transparent;box-shadow:var(--glow-teal);}
+.zoomgroup{display:flex;flex-direction:column;background:rgba(22,39,58,0.88);backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-soft);}
 .zoombtn{width:44px;height:40px;border:none;background:transparent;color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s ease;}
 .zoombtn:first-child{border-bottom:1px solid var(--line);}
 .zoombtn:hover{background:rgba(255,255,255,0.08);}
@@ -211,9 +219,9 @@ body{background:var(--navy);}
 /* ---------- BOTTOM SHEET ---------- */
 #bottomSheet{
   position:absolute;left:0;right:0;bottom:0;z-index:900;
-  background:rgba(22,39,58,0.97);backdrop-filter:blur(12px);
-  border-top:1px solid var(--line);
-  border-radius:20px 20px 0 0;
+  background:rgba(22,39,58,0.94);backdrop-filter:blur(16px) saturate(140%);
+  border-top:1px solid rgba(255,255,255,0.08);
+  border-radius:22px 22px 0 0;
   box-shadow:0 -10px 30px rgba(6,12,20,0.4);
   transform:translateY(100%);
   transition:transform .32s cubic-bezier(.22,.9,.32,1);
@@ -327,6 +335,25 @@ body{background:var(--navy);}
 .place-actions button:active{transform:scale(0.9);}
 .place-actions button.danger{color:var(--danger);}
 .empty-hint{color:var(--gray);font-size:13px;text-align:center;padding:20px 10px;}
+
+/* riwayat perjalanan */
+.history-header{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 12px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+.history-back{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--cream);font-weight:700;font-size:13.5px;cursor:pointer;padding:4px 2px;}
+.history-back:active{opacity:0.7;}
+.history-clear{display:flex;align-items:center;gap:6px;background:rgba(232,93,93,0.1);border:1px solid rgba(232,93,93,0.3);color:var(--danger);font-weight:700;font-size:11.5px;border-radius:9px;padding:7px 10px;cursor:pointer;}
+.history-clear:active{transform:scale(0.94);}
+.history-item{
+  display:flex;align-items:flex-start;gap:12px;padding:12px 4px;border-bottom:1px solid var(--line);
+  animation:fadeInUp .22s ease both;
+}
+.history-item:last-child{border-bottom:none;}
+.history-icon{width:36px;height:36px;min-width:36px;border-radius:11px;background:rgba(46,196,182,0.12);color:var(--teal);display:flex;align-items:center;justify-content:center;}
+.history-icon svg{width:18px;height:18px;}
+.history-body{flex:1;min-width:0;}
+.history-route{color:var(--cream);font-size:13.5px;font-weight:600;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.history-meta{color:var(--gray);font-size:11.5px;margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.history-meta .dot-sep{width:3px;height:3px;border-radius:50%;background:var(--gray);display:inline-block;}
+.history-time{color:var(--gray);font-size:11px;font-family:'Space Grotesk',sans-serif;white-space:nowrap;padding-top:1px;}
 
 /* settings sections */
 .settings-section{margin-bottom:18px;}
@@ -541,6 +568,26 @@ body{background:var(--navy);}
       </div>
 
       <div class="settings-section">
+        <div class="settings-title">Mesin Rute</div>
+        <div style="color:var(--gray);font-size:12px;line-height:1.5;margin-bottom:8px;">
+          Default: JCMaps memakai <b style="color:var(--cream)">Valhalla</b> (mendukung rute alternatif &amp; profil motor asli), otomatis pindah ke OSRM kalau tidak terjangkau. Opsional: isi API key gratis <b style="color:var(--cream)">GraphHopper</b> di bawah untuk hasil hindari tol/jalan raya yang lebih akurat lagi (dipakai duluan kalau diisi).
+        </div>
+        <input type="text" class="field-input" id="ghKeyInput" placeholder="Tempel API key GraphHopper (opsional)..." style="width:100%;">
+        <a href="https://www.graphhopper.com/dashboard/#/register" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;color:var(--teal);font-size:12px;font-weight:700;text-decoration:none;">Daftar API key gratis di graphhopper.com →</a>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Riwayat</div>
+        <div class="toggle-row" id="btnOpenHistory" style="cursor:pointer;">
+          <div class="toggle-text">
+            <span class="toggle-label">Riwayat Perjalanan</span>
+            <span class="toggle-hint" id="historyCountHint">Belum ada perjalanan</span>
+          </div>
+          <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;color:var(--gray);"><path d="M9 6 L15 12 L9 18"/></svg>
+        </div>
+      </div>
+
+      <div class="settings-section">
         <div class="settings-title">Fitur Lanjutan</div>
         <div style="color:var(--gray);font-size:12px;margin-bottom:6px;">Tampilan penanda GPS</div>
         <div class="gps-chips" id="gpsChips">
@@ -566,6 +613,20 @@ body{background:var(--navy);}
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="menu-content" id="tabHistory" style="display:none;">
+      <div class="history-header">
+        <button class="history-back" id="btnHistoryBack">
+          <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px;"><path d="M15 6 L9 12 L15 18"/></svg>
+          Kembali
+        </button>
+        <button class="history-clear" id="btnHistoryClear" title="Hapus semua riwayat">
+          <svg class="icon" viewBox="0 0 24 24" style="width:15px;height:15px;"><path d="M4 7 h16 M9 7 V4 h6 v3 M6 7 l1 13 h10 l1 -13"/></svg>
+          Hapus Semua
+        </button>
+      </div>
+      <div id="historyList"></div>
     </div>
   </div>
 
@@ -663,14 +724,14 @@ let currentMode = "car";
 let searchTimer = null;
 let activeSearchTarget = "quick"; // 'quick' | 'origin' | 'dest'
 let currentRouteCoords = [], currentManeuvers = [], voiceStepIndex = 0;
-let lastValhallaData = null, activeTripIndex = 0, routeLayers = [];
+let lastRouteData = null, lastRouteSource = null, activeTripIndex = 0, routeLayers = [];
 let savedPlaceMarkers = [], pendingPlaceLatLng = null, tempPlaceMarker = null;
 let pressTimer = null, pressLatLng = null;
 
 /* ================= SETELAN & PENANDA TEMPAT (localStorage) ================= */
 const SETTINGS_KEY = 'jcmaps_settings';
 const PLACES_KEY = 'jcmaps_places';
-let SETTINGS = { voice:true, avoidToll:false, avoidHighway:false, avoidTraffic:false, gpsIconType:'default' };
+let SETTINGS = { voice:true, avoidToll:false, avoidHighway:false, avoidTraffic:false, gpsIconType:'default', graphhopperKey:'' };
 let PLACES = [];
 
 function loadSettings(){
@@ -691,6 +752,69 @@ function loadPlaces(){
 function savePlaces(){
   try{ localStorage.setItem(PLACES_KEY, JSON.stringify(PLACES)); }catch(e){}
 }
+
+/* ---- Riwayat Perjalanan ---- */
+const HISTORY_KEY = 'jcmaps_history';
+const HISTORY_LIMIT = 60;
+const MODE_LABEL = { car:'Mobil', motor:'Motor', bike:'Sepeda', foot:'Jalan Kaki' };
+const BULAN_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+let HISTORY = [];
+
+function loadHistory(){
+  try{
+    const raw = localStorage.getItem(HISTORY_KEY);
+    HISTORY = raw ? JSON.parse(raw) : [];
+  }catch(e){ HISTORY = []; }
+}
+function saveHistory(){
+  try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(HISTORY)); }catch(e){}
+}
+function addHistoryEntry(originName, destName, mode, distanceM, durationSec){
+  HISTORY.unshift({
+    id: 'h' + Date.now(),
+    originName: originName || 'Lokasi Anda',
+    destName: destName || 'Tujuan',
+    mode, distanceM, durationSec,
+    timestamp: new Date().toISOString()
+  });
+  if(HISTORY.length > HISTORY_LIMIT) HISTORY = HISTORY.slice(0, HISTORY_LIMIT);
+  saveHistory();
+  updateHistoryHint();
+}
+function formatHistoryTimestamp(iso){
+  const d = new Date(iso);
+  const jam = String(d.getHours()).padStart(2,'0');
+  const mnt = String(d.getMinutes()).padStart(2,'0');
+  const dtk = String(d.getSeconds()).padStart(2,'0');
+  return `${d.getDate()} ${BULAN_ID[d.getMonth()]} ${d.getFullYear()}, ${jam}:${mnt}:${dtk}`;
+}
+function updateHistoryHint(){
+  const hint = document.getElementById('historyCountHint');
+  if(hint) hint.textContent = HISTORY.length ? `${HISTORY.length} perjalanan tercatat` : 'Belum ada perjalanan';
+}
+function renderHistoryList(){
+  const wrap = document.getElementById('historyList');
+  wrap.innerHTML = '';
+  if(!HISTORY.length){
+    wrap.innerHTML = '<div class="empty-hint">Belum ada riwayat perjalanan. Riwayat otomatis tersimpan tiap kali kamu menghitung rute.</div>';
+    return;
+  }
+  HISTORY.forEach(h => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.innerHTML = `<div class="history-icon">${ICON.flag}</div>
+      <div class="history-body">
+        <div class="history-route">${h.originName} &rarr; ${h.destName}</div>
+        <div class="history-meta">
+          <span>${MODE_LABEL[h.mode] || h.mode}</span><span class="dot-sep"></span>
+          <span>${formatDistance(h.distanceM)}</span><span class="dot-sep"></span>
+          <span>${formatDuration(h.durationSec)}</span>
+        </div>
+      </div>
+      <div class="history-time">${formatHistoryTimestamp(h.timestamp)}</div>`;
+    wrap.appendChild(div);
+  });
+}
 function applySettingsToUI(){
   document.querySelectorAll('.toggle-switch[data-setting]').forEach(el => {
     el.classList.toggle('on', !!SETTINGS[el.dataset.setting]);
@@ -700,6 +824,8 @@ function applySettingsToUI(){
   });
   const vIcon = document.getElementById('voiceIcon');
   if(vIcon) vIcon.innerHTML = SETTINGS.voice ? ICON.speakerOn.replace(/<\/?svg[^>]*>/g,'') : ICON.speakerOff.replace(/<\/?svg[^>]*>/g,'');
+  const ghInput = document.getElementById('ghKeyInput');
+  if(ghInput && document.activeElement !== ghInput) ghInput.value = SETTINGS.graphhopperKey || '';
 }
 
 /* ================= MAP INIT ================= */
@@ -1146,7 +1272,8 @@ function clearRoute(){
   currentRouteCoords = [];
   currentManeuvers = [];
   voiceStepIndex = 0;
-  lastValhallaData = null;
+  lastRouteData = null;
+  lastRouteSource = null;
   activeTripIndex = 0;
   if('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
@@ -1189,7 +1316,96 @@ function renderGuidance(coordsLatLng, maneuvers, totalTimeSec, totalDistM){
   speak(`Rute ditemukan. Jarak ${formatDistance(totalDistM)}, estimasi ${formatDuration(totalTimeSec)}.`);
 }
 
-/* ================= VALHALLA (mesin rute utama) ================= */
+/* ================= GRAPHHOPPER (mesin rute utama, butuh API key gratis) ================= */
+// GraphHopper hosted API TIDAK gratis-tanpa-akun seperti OSRM/Valhalla — wajib pakai API key
+// (daftar gratis di graphhopper.com). Kalau key kosong atau gagal, otomatis lempar ke Valhalla lalu OSRM.
+const GRAPHHOPPER_URL = "https://graphhopper.com/api/1/route";
+// Profil "motorcycle" resmi GraphHopper hanya tersedia untuk akun enterprise/khusus,
+// jadi mode Motor sengaja TIDAK lewat GraphHopper — otomatis pakai Valhalla (punya profil motorcycle asli).
+const GRAPHHOPPER_PROFILE = { car: "car", bike: "bike", foot: "foot" };
+
+function buildGHCustomModel(){
+  const rules = [];
+  // multiply_by "0" = jalan itu praktis diblokir (bukan cuma dikurangi prioritasnya),
+  // ini mekanisme avoid paling kuat yang tersedia di custom_model GraphHopper.
+  if(SETTINGS.avoidToll) rules.push({ if: "toll == ALL", multiply_by: "0" });
+  if(SETTINGS.avoidHighway) rules.push({ if: "road_class == MOTORWAY", multiply_by: "0" });
+  return rules.length ? { priority: rules } : null;
+}
+
+async function fetchGraphHopperRoute(){
+  if(!SETTINGS.graphhopperKey) throw new Error('gh-no-key');
+  const profile = GRAPHHOPPER_PROFILE[currentMode];
+  if(!profile) throw new Error('gh-unsupported-mode');
+
+  const customModel = buildGHCustomModel();
+  const body = {
+    points: [ [originLatLng[1], originLatLng[0]], [destLatLng[1], destLatLng[0]] ],
+    profile: profile,
+    points_encoded: false,
+    instructions: true,
+    locale: "en"
+  };
+  if(customModel){
+    body["ch.disable"] = true;
+    body.custom_model = customModel;
+  } else {
+    body.algorithm = "alternative_route";
+    body["alternative_route.max_paths"] = 2;
+  }
+
+  const res = await fetch(`${GRAPHHOPPER_URL}?key=${encodeURIComponent(SETTINGS.graphhopperKey)}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(() => '');
+    throw new Error('GraphHopper HTTP ' + res.status + ' ' + errText.slice(0,200));
+  }
+  const data = await res.json();
+  if(!data.paths || !data.paths.length) throw new Error('Respons GraphHopper tidak valid');
+  return data;
+}
+
+function ghManeuverIcon(sign){
+  if(sign === 4) return ICON.flag;
+  if(sign === 5) return ICON.pinSm;
+  if(sign === 6 || sign === -6) return ICON.roundabout;
+  if(sign > 0) return ICON.turnRight;
+  if(sign < 0) return ICON.turnLeft;
+  return ICON.straight;
+}
+function ghCoordsFromPath(path){
+  return path.points.coordinates.map(c => [c[1], c[0]]);
+}
+function ghManeuversFromPath(path){
+  return path.instructions.map(ins => ({
+    text: ins.text,
+    distanceM: ins.distance,
+    icon: ghManeuverIcon(ins.sign),
+    coordIndex: ins.interval ? ins.interval[0] : 0
+  }));
+}
+
+/* ---- Adapter generik: samakan bentuk data dari GraphHopper & Valhalla ---- */
+function getTripsGeneric(){
+  if(lastRouteSource === 'graphhopper') return lastRouteData.paths;
+  if(lastRouteSource === 'valhalla') return tripsFromData(lastRouteData);
+  return [];
+}
+function getCoordsGeneric(trip){
+  return lastRouteSource === 'graphhopper' ? ghCoordsFromPath(trip) : coordsFromTrip(trip);
+}
+function getManeuversGeneric(trip){
+  return lastRouteSource === 'graphhopper' ? ghManeuversFromPath(trip) : maneuversFromTrip(trip);
+}
+function getSummaryGeneric(trip){
+  if(lastRouteSource === 'graphhopper') return { time: trip.time / 1000, distance: trip.distance };
+  return { time: trip.summary.time, distance: trip.summary.length * 1000 };
+}
+
+/* ================= VALHALLA (cadangan pertama, sekaligus mesin untuk mode Motor) ================= */
 function buildValhallaCostingOptions(mode){
   if(mode !== 'car' && mode !== 'motor') return undefined;
   const opts = {};
@@ -1258,16 +1474,16 @@ function clearRouteLayers(){
 
 function renderRoutes(){
   clearRouteLayers();
-  if(!lastValhallaData) return;
-  const trips = tripsFromData(lastValhallaData);
+  if(!lastRouteData) return;
+  const trips = getTripsGeneric();
   trips.forEach((trip, idx) => {
     if(idx === activeTripIndex) return;
-    const coords = coordsFromTrip(trip);
+    const coords = getCoordsGeneric(trip);
     const line = L.polyline(coords, { color:'#9AA6B4', weight:4, opacity:0.85 }).addTo(map);
     line.on('click', () => setActiveTrip(idx));
     routeLayers.push(line);
   });
-  const activeCoords = coordsFromTrip(trips[activeTripIndex]);
+  const activeCoords = getCoordsGeneric(trips[activeTripIndex]);
   const casing = L.polyline(activeCoords, { color:'#0E1A24', opacity:0.5, weight:9 }).addTo(map);
   const mainLine = L.polyline(activeCoords, { color:'#2EC4B6', opacity:0.95, weight:5 }).addTo(map);
   routeLayers.push(casing, mainLine);
@@ -1276,8 +1492,10 @@ function renderRoutes(){
 function setActiveTrip(idx){
   activeTripIndex = idx;
   renderRoutes();
-  const trip = tripsFromData(lastValhallaData)[idx];
-  renderGuidance(coordsFromTrip(trip), maneuversFromTrip(trip), trip.summary.time, trip.summary.length * 1000);
+  const trips = getTripsGeneric();
+  const trip = trips[idx];
+  const summary = getSummaryGeneric(trip);
+  renderGuidance(getCoordsGeneric(trip), getManeuversGeneric(trip), summary.time, summary.distance);
 }
 
 function tryRouteWithServer(serverIndex){
@@ -1362,13 +1580,37 @@ async function computeRoute(){
   clearRoute();
   showToast('Menghitung rute...', true);
 
+  // 1) GraphHopper (utama, kalau API key diisi) -> 2) Valhalla (cadangan / mesin asli mode Motor) -> 3) OSRM (cadangan terakhir)
+  if(currentMode !== 'motor' && SETTINGS.graphhopperKey){
+    try{
+      const data = await fetchGraphHopperRoute();
+      lastRouteData = data; lastRouteSource = 'graphhopper';
+      setActiveTrip(0);
+      map.fitBounds(L.latLngBounds(getCoordsGeneric(data.paths[0])), { padding:[70,70] });
+      addHistoryEntry(
+        document.getElementById('inputOrigin').value,
+        document.getElementById('inputDest').value,
+        currentMode, data.paths[0].distance, data.paths[0].time / 1000
+      );
+      hideToast();
+      return;
+    }catch(ghErr){
+      console.error('JCMaps: GraphHopper gagal, coba Valhalla.', ghErr);
+    }
+  }
+
   try{
     const data = await fetchValhallaRoute();
-    lastValhallaData = data;
+    lastRouteData = data; lastRouteSource = 'valhalla';
     setActiveTrip(0);
-    map.fitBounds(L.latLngBounds(coordsFromTrip(data.trip)), { padding:[70,70] });
+    map.fitBounds(L.latLngBounds(getCoordsGeneric(data.trip)), { padding:[70,70] });
+    addHistoryEntry(
+      document.getElementById('inputOrigin').value,
+      document.getElementById('inputDest').value,
+      currentMode, data.trip.summary.length * 1000, data.trip.summary.time
+    );
   }catch(err){
-    console.error('JCMaps: Valhalla tidak terjangkau, beralih ke OSRM cadangan.', err);
+    console.error('JCMaps: Valhalla juga tidak terjangkau, beralih ke OSRM cadangan.', err);
     tryRouteWithServer(0);
   }
   hideToast();
@@ -1408,7 +1650,7 @@ function init(){
       document.querySelectorAll('.modebtn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentMode = btn.dataset.mode;
-      if(routingControl || lastValhallaData) computeRoute();
+      if(routingControl || lastRouteData) computeRoute();
     });
   });
 
@@ -1468,14 +1710,40 @@ function init(){
   });
   document.getElementById('btnMenuClose').addEventListener('click', () => {
     document.getElementById('menuSheet').classList.remove('show');
+    document.getElementById('tabHistory').style.display = 'none';
+    document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.menu-tab[data-tab="places"]').classList.add('active');
+    document.getElementById('tabPlaces').style.display = 'block';
+    document.getElementById('tabSettings').style.display = 'none';
   });
   document.querySelectorAll('.menu-tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.menu-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      document.getElementById('tabHistory').style.display = 'none';
       document.getElementById('tabPlaces').style.display = tab.dataset.tab === 'places' ? 'block' : 'none';
       document.getElementById('tabSettings').style.display = tab.dataset.tab === 'settings' ? 'block' : 'none';
     });
+  });
+
+  /* ---- Riwayat Perjalanan ---- */
+  document.getElementById('btnOpenHistory').addEventListener('click', () => {
+    document.getElementById('tabSettings').style.display = 'none';
+    document.getElementById('tabHistory').style.display = 'block';
+    renderHistoryList();
+  });
+  document.getElementById('btnHistoryBack').addEventListener('click', () => {
+    document.getElementById('tabHistory').style.display = 'none';
+    document.getElementById('tabSettings').style.display = 'block';
+  });
+  document.getElementById('btnHistoryClear').addEventListener('click', () => {
+    if(!HISTORY.length) return;
+    if(confirm('Hapus semua riwayat perjalanan? Tindakan ini tidak bisa dibatalkan.')){
+      HISTORY = [];
+      saveHistory();
+      renderHistoryList();
+      updateHistoryHint();
+    }
   });
 
   /* ---- Toggle setelan (Suara, Hindari Tol/Raya/Macet) ---- */
@@ -1489,7 +1757,7 @@ function init(){
         applySettingsToUI();
         if(!SETTINGS.voice && 'speechSynthesis' in window){ window.speechSynthesis.cancel(); }
       }
-      if((key === 'avoidToll' || key === 'avoidHighway') && (routingControl || lastValhallaData)){ computeRoute(); }
+      if((key === 'avoidToll' || key === 'avoidHighway') && (routingControl || lastRouteData)){ computeRoute(); }
     });
   });
 
@@ -1502,6 +1770,13 @@ function init(){
       saveSettings();
       if(gpsMarker) gpsMarker.setIcon(buildGpsIcon(lastFix ? lastHeading : null));
     });
+  });
+
+  /* ---- Kunci API GraphHopper ---- */
+  document.getElementById('ghKeyInput').addEventListener('change', (e) => {
+    SETTINGS.graphhopperKey = e.target.value.trim();
+    saveSettings();
+    showToast(SETTINGS.graphhopperKey ? 'API key GraphHopper tersimpan' : 'API key dikosongkan — pakai Valhalla/OSRM', false);
   });
 
   /* ---- Dialog simpan penanda tempat ---- */
@@ -1544,7 +1819,9 @@ function init(){
   // muat setelan & penanda tempat tersimpan dari localStorage
   loadSettings();
   loadPlaces();
+  loadHistory();
   applySettingsToUI();
+  updateHistoryHint();
   refreshSavedPlaceMarkers();
 
   // auto request location on load
